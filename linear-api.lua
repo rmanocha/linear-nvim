@@ -29,6 +29,9 @@ local curl = require("plenary.curl")
 API_URL = "https://api.linear.app/graphql"
 TOKEN = "ABC"
 
+-- @param token string
+-- @param query string
+-- @return table
 local function make_query(token, query)
   local headers = {
     ["Authorization"] = token,
@@ -41,7 +44,7 @@ local function make_query(token, query)
   })
 
   if resp.status ~= 200 then
-    print("Failed to fetch data: HTTP status " .. resp.status)
+    print(string.format("Failed to fetch data: HTTP status %s, Response body: %s", resp.status, resp.body))
     return nil
   end
 
@@ -49,8 +52,9 @@ local function make_query(token, query)
   return data
 end
 
+-- @return string
 function M.get_user_id()
-  local query = '{ "query": "{ users { nodes { id name } } }" }'
+  local query = '{ "query": "{ viewer { id name } }" }'
   local data = make_query(TOKEN, query)
   if data and data.data and data.data.viewer and data.data.viewer.id then
     return data.data.viewer.id
@@ -60,24 +64,27 @@ function M.get_user_id()
   end
 end
 
+-- @param userid string
+-- @return table
 function M.get_assigned_issues(userid)
   local query = string.format(
     [[
-    query {
-        user(id: "%s") {
-            id
-            name
-            assignedIssues {
-                nodes {
-                    id
-                    title
-                    identifier
-                    branchName
-                }
-            }
+    {"query" :
+    "query {
+      user(id: \"%s\") {
+      id
+      name
+      assignedIssues {
+        nodes {
+          id
+          title
+          identifier
+          branchName
         }
+      }
     }
-    ]],
+  }"}
+  ]],
     userid
   )
   local data = make_query(TOKEN, query)
