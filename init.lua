@@ -14,16 +14,6 @@ function M.do_something()
   print("Hello world")
 end
 
-function M.set_api_key()
-  local api_key = vim.fn.input("Enter your API key: ")
-  if api_key ~= "" then
-    key_store.save_api_key(api_key)
-    print("API key saved successfully!")
-  else
-    print("No API key entered.")
-  end
-end
-
 function M.show_user_id()
   print(linear_api.get_user_id(key_store.get_api_key()))
 end
