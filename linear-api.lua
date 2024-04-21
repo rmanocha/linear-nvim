@@ -1,40 +1,14 @@
--- query  {
---   user(id: "{userid}")
---     id
---     name
---     assignedIssues {
---       nodes {
---         id
---         title
---         identifier
---         branchName
---       }
---     }
---   }
--- }
---
--- id: ${userid}
---
--- Get user id from
---
--- query {
---   viewer {
---     id
---     name
---   }
--- }
 local M = {}
 local curl = require("plenary.curl")
 
 API_URL = "https://api.linear.app/graphql"
-TOKEN = "ABC"
 
 -- @param token string
 -- @param query string
 -- @return table
-local function make_query(token, query)
+local function make_query(api_key, query)
   local headers = {
-    ["Authorization"] = token,
+    ["Authorization"] = api_key,
     ["Content-Type"] = "application/json",
   }
 
@@ -52,10 +26,11 @@ local function make_query(token, query)
   return data
 end
 
+-- @param api_key string
 -- @return string
-function M.get_user_id()
+function M.get_user_id(api_key)
   local query = '{ "query": "{ viewer { id name } }" }'
-  local data = make_query(TOKEN, query)
+  local data = make_query(api_key, query)
   if data and data.data and data.data.viewer and data.data.viewer.id then
     return data.data.viewer.id
   else
@@ -64,16 +39,17 @@ function M.get_user_id()
   end
 end
 
+-- @param api_key string
 -- @param userid string
 -- @return table
-function M.get_assigned_issues(userid)
+function M.get_assigned_issues(api_key, userid)
   -- Correctly format the JSON query string to ensure valid JSON
   local query = string.format(
     '{"query": "query { user(id: \\"%s\\") { id name assignedIssues { nodes { id title identifier branchName } } } }"}',
     userid
   )
   -- Execute the query using the make_query function
-  local data = make_query(TOKEN, query)
+  local data = make_query(api_key, query)
 
   -- Check the structure of the returned data and extract the necessary information
   if data and data.data and data.data.user and data.data.user.assignedIssues then

@@ -25,11 +25,13 @@ function M.set_api_key()
 end
 
 function M.show_user_id()
-  print(linear_api.get_user_id())
+  print(linear_api.get_user_id(key_store.get_api_key()))
 end
 
 function M.show_assigned_issues()
-  print(linear_api.get_assigned_issues(linear_api.get_user_id()))
+  local api_key = key_store.get_api_key()
+  local user_id = linear_api.get_user_id(api_key)
+  print(linear_api.get_assigned_issues(api_key, user_id))
 end
 
 return M
