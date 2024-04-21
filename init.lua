@@ -18,7 +18,7 @@ function M.show_user_id()
 end
 
 function M.show_assigned_issues()
-  linear_api.get_assigned_issues(linear_api.get_user_id())
+  print(linear_api.get_assigned_issues(linear_api.get_user_id()))
 end
 
 return M
