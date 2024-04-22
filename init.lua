@@ -21,7 +21,10 @@ end
 function M.show_assigned_issues()
   local api_key = key_store.get_api_key()
   local user_id = linear_api.get_user_id(api_key)
-  print(linear_api.get_assigned_issues(api_key, user_id))
+  local issues = linear_api.get_assigned_issues(api_key, user_id)
+  for _, issue in ipairs(issues) do
+    print(issue.identifier .. " - " .. issue.title)
+  end
 end
 
 return M
