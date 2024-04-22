@@ -6,15 +6,44 @@ local key_store = require("key-store")
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local conf = require("telescope.config").values
+local actions = require("telescope.actions")
+local action_state = require("telescope.actions.state")
 
 local function show_picker(issues)
+  -- Prepare entries for the picker from the issues map
+  local entries = {}
+  for display_key, copy_value in pairs(issues) do
+    table.insert(entries, {
+      value = copy_value, -- This is what will be copied to the clipboard
+      display = display_key, -- How the entry will be displayed
+      ordinal = display_key, -- Used for sorting and searching
+    })
+  end
+
   pickers
     .new({}, {
       prompt_title = "Issues",
       finder = finders.new_table({
-        results = issues,
+        results = entries,
+        entry_maker = function(entry)
+          return {
+            value = entry.value,
+            display = entry.display,
+            ordinal = entry.ordinal,
+          }
+        end,
       }),
       sorter = conf.generic_sorter({}),
+      attach_mappings = function(prompt_bufnr, _)
+        actions.select_default:replace(function()
+          actions.close(prompt_bufnr)
+          local selection = action_state.get_selected_entry()
+          vim.fn.setreg("+", selection.value) -- Copy to clipboard (system clipboard "+")
+          vim.fn.setreg('"', selection.value) -- Copy to default register (unnamed register)
+          print("Copied to clipboard: " .. selection.value)
+        end)
+        return true
+      end,
     })
     :find()
 end
@@ -40,7 +69,8 @@ function M.show_assigned_issues()
   local issue_titles = {}
   for _, issue in ipairs(issues) do
     -- print(issue.identifier .. " - " .. issue.title)
-    table.insert(issue_titles, issue.identifier .. " - " .. issue.title)
+    -- table.insert(issue_titles, issue.identifier .. " - " .. issue.title)
+    issue_titles[issue.identifier .. " - " .. issue.title] = issue.branchName
   end
 
   show_picker(issue_titles)
