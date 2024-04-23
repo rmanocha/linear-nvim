@@ -8,15 +8,17 @@ local finders = require("telescope.finders")
 local conf = require("telescope.config").values
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
+local previewers = require("telescope.previewers")
 
 local function show_picker(issues)
   -- Prepare entries for the picker from the issues map
   local entries = {}
-  for display_key, copy_value in pairs(issues) do
+  for display_key, data_bag in pairs(issues) do
     table.insert(entries, {
-      value = copy_value, -- This is what will be copied to the clipboard
+      value = data_bag.branch_name, -- This is what will be copied to the clipboard
       display = display_key, -- How the entry will be displayed
       ordinal = display_key, -- Used for sorting and searching
+      description = data_bag.description, -- Additional information that can be displayed
     })
   end
 
@@ -30,10 +32,18 @@ local function show_picker(issues)
             value = entry.value,
             display = entry.display,
             ordinal = entry.ordinal,
+            description = entry.description,
           }
         end,
       }),
       sorter = conf.generic_sorter({}),
+      previewer = previewers.new_buffer_previewer({
+        define_preview = function(self, entry, _)
+          local lines = vim.split(entry.description, "\n", { plain = true })
+          -- Set up preview window with description from the entry
+          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+        end,
+      }),
       attach_mappings = function(prompt_bufnr, _)
         actions.select_default:replace(function()
           actions.close(prompt_bufnr)
@@ -68,9 +78,12 @@ function M.show_assigned_issues()
 
   local issue_titles = {}
   for _, issue in ipairs(issues) do
-    -- print(issue.identifier .. " - " .. issue.title)
-    -- table.insert(issue_titles, issue.identifier .. " - " .. issue.title)
-    issue_titles[issue.identifier .. " - " .. issue.title] = issue.branchName
+    local description = issue.description
+    if description == vim.NIL or description == nil then
+      description = "No description available"
+    end
+    issue_titles[issue.identifier .. " - " .. issue.title] =
+      { branch_name = issue.branchName, description = description }
   end
 
   show_picker(issue_titles)
