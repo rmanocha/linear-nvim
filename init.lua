@@ -1,6 +1,6 @@
 local M = {}
-local linear_api = require("linear-api")
-local key_store = require("key-store")
+local linear_api = require("linear-nvim.linear-api")
+local key_store = require("linear-nvim.key-store")
 
 -- telescope imports
 local pickers = require("telescope.pickers")
