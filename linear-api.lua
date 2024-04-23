@@ -45,7 +45,7 @@ end
 function M.get_assigned_issues(api_key, userid)
   -- Correctly format the JSON query string to ensure valid JSON
   local query = string.format(
-    '{"query": "query { user(id: \\"%s\\") { id name assignedIssues { nodes { id title identifier branchName description } } } }"}',
+    '{"query": "query { user(id: \\"%s\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"backlog\\", \\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}',
     userid
   )
   -- Execute the query using the make_query function
