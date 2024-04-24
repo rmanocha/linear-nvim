@@ -89,4 +89,19 @@ function M.show_assigned_issues()
   show_picker(issue_titles)
 end
 
+function M.create_issue()
+  local api_key = key_store.get_api_key()
+  local user_id = linear_api.get_user_id(api_key)
+  local team_id = key_store.set_team_id()
+  local title = vim.fn.input("Enter the title of the issue: ")
+  local description = vim.fn.input("Enter the description of the issue: ")
+  local issue = linear_api.create_issue(api_key, user_id, title, description, team_id)
+  if issue ~= nil then
+    print("Issue created successfully!")
+    print(issue.url)
+  else
+    print("Failed to create issue")
+  end
+end
+
 return M

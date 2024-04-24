@@ -4,6 +4,7 @@ local FILENAME = "/linear_api_key.txt"
 local FILE_PATH = vim.fn.stdpath("data") .. FILENAME
 
 M._api_key = ""
+M._team_id = ""
 
 local function save_api_key(api_key)
   local file = io.open(FILE_PATH, "w") -- Open the file for writing
@@ -36,6 +37,19 @@ function M.set_api_key()
   else
     print("No API key entered.")
   end
+end
+
+function M.set_team_id()
+  if not M._team_id or M._team_id == "" then
+    local team_id = vim.fn.input("Enter your team ID: ")
+    if team_id ~= "" then
+      M._team_id = team_id
+      print("Team ID saved successfully!")
+    else
+      print("No team ID entered.")
+    end
+  end
+  return M._team_id
 end
 
 -- @return string: The API key
