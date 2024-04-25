@@ -45,22 +45,13 @@ function M.get_or_set_team_id()
     local api_key = M.get_api_key()
     local teams = linear_api.get_teams(api_key)
     if teams ~= nil then
-      local selected_team = vim.ui.select(
-        vim.tbl_map(function(choice)
-          return choice.name
-        end, teams),
-        { prompt = "Choose your team:" },
-        function(choice, idx)
-          if choice == nil then
-            print("No team selected.")
-          else
-            print("Selected team: " .. choice .. " ID: " .. teams[idx].id)
-          end
-        end
-      )
-
-      M._team_id = selected_team
-      print("Team ID saved successfully!")
+      local options = {}
+      for i, team in ipairs(teams) do
+        table.insert(options, string.format("%d: %s", i, team.name))
+      end
+      local selected_team = vim.fn.inputlist(options)
+      M._team_id = teams[selected_team].id
+      print("Selected team " .. teams[selected_team].name .. " saved successfully!")
     else
       print("No team ID selected.")
     end
