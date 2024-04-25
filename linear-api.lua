@@ -93,4 +93,19 @@ function M.create_issue(api_key, userid, title, description, teamid)
   end
 end
 
+function M.get_teams(api_key)
+  -- Correctly format the JSON query string to ensure valid JSON
+  local query = '{ "query": "query { teams { nodes {id name }} }" }'
+
+  -- Execute the query using the make_query function
+  local data = make_query(api_key, query)
+
+  -- Check the structure of the returned data and extract the necessary information
+  if data and data.data and data.data.teams and data.data.teams.nodes then
+    return data.data.teams.nodes
+  else
+    print("No teams found")
+    return nil
+  end
+end
 return M
