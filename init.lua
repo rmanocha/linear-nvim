@@ -94,20 +94,25 @@ function M.create_issue()
   local api_key = key_store.get_api_key()
   local user_id = linear_api.get_user_id(api_key)
   local team_id = key_store.get_or_set_team_id()
-  local selection = utils.get_visual_selection()
-  local title = selection[1]
-  print(title)
-  -- print(title .. " " .. description)
-  -- if title == "" then
-  --   title = vim.fn.input("Enter the title of the issue: ")
-  -- end
-  -- local issue = linear_api.create_issue(api_key, user_id, title, description, team_id)
-  -- if issue ~= nil then
-  --   print("Issue created successfully!")
-  --   print(issue.url)
-  -- else
-  --   print("Failed to create issue")
-  -- end
+
+  local full_selection = utils.get_visual_selection()
+  local title, description = full_selection:match("([^\n]*)\n(.*)")
+
+  -- If there is no newline, the whole selection is the title
+  if not title then
+    title = full_selection
+    description = ""
+  end
+  if title == "" then
+    title = vim.fn.input("Enter the title of the issue: ")
+  end
+  local issue = linear_api.create_issue(api_key, user_id, title, description, team_id)
+  if issue ~= nil then
+    print("Issue created successfully!")
+    print(issue.url)
+  else
+    print("Failed to create issue")
+  end
 end
 
 return M
