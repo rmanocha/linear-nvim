@@ -62,10 +62,10 @@ end
 
 -- @param api_key string
 -- @param userid string
+-- @param teamid string
 -- @param title string
 -- @param description string
--- @param teamid string
-function M.create_issue(api_key, userid, title, description, teamid)
+function M.create_issue(api_key, userid, teamid, title, description)
   -- Correctly format the JSON query string to ensure valid JSON
   local query = string.format(
     '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" description: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',

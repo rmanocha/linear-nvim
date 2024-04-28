@@ -106,7 +106,7 @@ function M.create_issue()
   if title == "" then
     title = vim.fn.input("Enter the title of the issue: ")
   end
-  local issue = linear_api.create_issue(api_key, user_id, title, description, team_id)
+  local issue = linear_api.create_issue(api_key, user_id, team_id, title, description)
   if issue ~= nil then
     print("Issue created successfully!")
     print(issue.url)
