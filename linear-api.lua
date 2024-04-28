@@ -1,5 +1,6 @@
 local M = {}
 local curl = require("plenary.curl")
+local utils = require("linear-nvim.utils")
 
 API_URL = "https://api.linear.app/graphql"
 
@@ -67,13 +68,18 @@ end
 -- @param description string
 function M.create_issue(api_key, userid, teamid, title, description)
   -- Correctly format the JSON query string to ensure valid JSON
+  local parsed_title = utils.escape_json_string(title)
+  --local parsed_description = utils.escape_json_string(description)
   local query = string.format(
-    '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" description: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
-    title,
-    description,
+    -- can't figure out how to send newlines in the description. skipping it for now
+    --'{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" description: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
+    '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
+    parsed_title,
+    --parsed_description,
     teamid,
     userid
   )
+  print(query)
   -- Execute the query using the make_query function
   local data = make_query(api_key, query)
 

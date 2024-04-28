@@ -53,4 +53,17 @@ function M.get_visual_selection()
     }
 end
 
+-- @param str string
+-- @return string
+function M.escape_json_string(input_str)
+  if input_str then
+    input_str = string.gsub(input_str, "\\", "\\\\") -- Escape backslashes
+    input_str = string.gsub(input_str, '"', '\\"') -- Escape double quotes
+    input_str = string.gsub(input_str, "\n", "\\n") -- Escape newlines
+    input_str = string.gsub(input_str, "\r", "\\r") -- Escape carriage returns
+    input_str = string.gsub(input_str, "\t", "\\t") -- Escape tabs
+  end
+  return input_str
+end
+
 return M
