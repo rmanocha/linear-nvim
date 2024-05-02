@@ -11,7 +11,7 @@ local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local previewers = require("telescope.previewers")
 
-local function show_picker(issues)
+local function show_issues_picker(issues)
   -- Prepare entries for the picker from the issues map
   local entries = {}
   for display_key, data_bag in pairs(issues) do
@@ -59,6 +59,69 @@ local function show_picker(issues)
     :find()
 end
 
+local function show_create_issues_result_picker(issue)
+  local entries = {
+    {
+      value = issue.url,
+      display = "Copy Issue URL",
+      ordinal = "Copy Issue URL",
+      description = issue.url,
+    },
+    {
+      value = issue.branchName,
+      display = "Copy Branch Name",
+      ordinal = "Copy Branch Name",
+      description = issue.branchName,
+    },
+    {
+      value = issue.title,
+      display = "Copy Issue Title",
+      ordinal = "Copy Issue Title",
+      description = issue.title,
+    },
+    {
+      value = issue.identifier,
+      display = "Copy Issue Identifier",
+      ordinal = "Copy Issue Identifier",
+      description = issue.identifier,
+    },
+  }
+
+  pickers
+    .new({}, {
+      prompt_title = "Issue created",
+      finder = finders.new_table({
+        results = entries,
+        entry_maker = function(entry)
+          return {
+            value = entry.value,
+            display = entry.display,
+            ordinal = entry.ordinal,
+            description = entry.description,
+          }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      previewer = previewers.new_buffer_previewer({
+        define_preview = function(self, entry, _)
+          local lines = vim.split(entry.description, "\n", { plain = true })
+          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+        end,
+      }),
+      attach_mappings = function(prompt_bufnr, _)
+        actions.select_default:replace(function()
+          actions.close(prompt_bufnr)
+          local selection = action_state.get_selected_entry()
+          vim.fn.setreg("+", selection.value) -- Copy to clipboard (system clipboard "+")
+          vim.fn.setreg('"', selection.value) -- Copy to default register (unnamed register)
+          print("Copied to clipboard: " .. selection.value)
+        end)
+        return true
+      end,
+    })
+    :find()
+end
+
 -- create a setup command the user has to call to provide an api key to use
 -- once this key is saved, we can then setup key commands to trigger fetching
 -- issues from Linear and display them in something similar to neotree or neotest
@@ -87,7 +150,7 @@ function M.show_assigned_issues()
       { branch_name = issue.branchName, description = description }
   end
 
-  show_picker(issue_titles)
+  show_issues_picker(issue_titles)
 end
 
 function M.create_issue()
@@ -109,7 +172,7 @@ function M.create_issue()
   local issue = linear_api.create_issue(api_key, user_id, team_id, title, description)
   if issue ~= nil then
     print("Issue created successfully!")
-    print(issue.url)
+    show_create_issues_result_picker(issue)
   else
     print("Failed to create issue")
   end
