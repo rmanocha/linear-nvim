@@ -1,3 +1,11 @@
+-- telescope imports
+local pickers = require("telescope.pickers")
+local finders = require("telescope.finders")
+local conf = require("telescope.config").values
+local actions = require("telescope.actions")
+local action_state = require("telescope.actions.state")
+local previewers = require("telescope.previewers")
+
 local M = {}
 
 local function tbl_length(T)
@@ -64,6 +72,42 @@ function M.escape_json_string(input_str)
     input_str = string.gsub(input_str, "\t", "\\t") -- Escape tabs
   end
   return input_str
+end
+
+function M.show_telescope_picker(entries, prompt_title)
+  pickers
+    .new({}, {
+      prompt_title = prompt_title,
+      finder = finders.new_table({
+        results = entries,
+        entry_maker = function(entry)
+          return {
+            value = entry.value,
+            display = entry.display,
+            ordinal = entry.ordinal,
+            description = entry.description,
+          }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      previewer = previewers.new_buffer_previewer({
+        define_preview = function(self, entry, _)
+          local lines = vim.split(entry.description, "\n", { plain = true })
+          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+        end,
+      }),
+      attach_mappings = function(prompt_bufnr, _)
+        actions.select_default:replace(function()
+          actions.close(prompt_bufnr)
+          local selection = action_state.get_selected_entry()
+          vim.fn.setreg("+", selection.value) -- Copy to clipboard (system clipboard "+")
+          vim.fn.setreg('"', selection.value) -- Copy to default register (unnamed register)
+          print("Copied to clipboard: " .. selection.value)
+        end)
+        return true
+      end,
+    })
+    :find()
 end
 
 return M

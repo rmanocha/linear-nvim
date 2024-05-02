@@ -3,14 +3,6 @@ local linear_api = require("linear-nvim.linear-api")
 local key_store = require("linear-nvim.key-store")
 local utils = require("linear-nvim.utils")
 
--- telescope imports
-local pickers = require("telescope.pickers")
-local finders = require("telescope.finders")
-local conf = require("telescope.config").values
-local actions = require("telescope.actions")
-local action_state = require("telescope.actions.state")
-local previewers = require("telescope.previewers")
-
 local function show_issues_picker(issues)
   -- Prepare entries for the picker from the issues map
   local entries = {}
@@ -23,40 +15,7 @@ local function show_issues_picker(issues)
     })
   end
 
-  pickers
-    .new({}, {
-      prompt_title = "Issues",
-      finder = finders.new_table({
-        results = entries,
-        entry_maker = function(entry)
-          return {
-            value = entry.value,
-            display = entry.display,
-            ordinal = entry.ordinal,
-            description = entry.description,
-          }
-        end,
-      }),
-      sorter = conf.generic_sorter({}),
-      previewer = previewers.new_buffer_previewer({
-        define_preview = function(self, entry, _)
-          local lines = vim.split(entry.description, "\n", { plain = true })
-          -- Set up preview window with description from the entry
-          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
-        end,
-      }),
-      attach_mappings = function(prompt_bufnr, _)
-        actions.select_default:replace(function()
-          actions.close(prompt_bufnr)
-          local selection = action_state.get_selected_entry()
-          vim.fn.setreg("+", selection.value) -- Copy to clipboard (system clipboard "+")
-          vim.fn.setreg('"', selection.value) -- Copy to default register (unnamed register)
-          print("Copied to clipboard: " .. selection.value)
-        end)
-        return true
-      end,
-    })
-    :find()
+  utils.show_telescope_picker(entries, "Issues")
 end
 
 local function show_create_issues_result_picker(issue)
@@ -87,39 +46,7 @@ local function show_create_issues_result_picker(issue)
     },
   }
 
-  pickers
-    .new({}, {
-      prompt_title = "Issue created",
-      finder = finders.new_table({
-        results = entries,
-        entry_maker = function(entry)
-          return {
-            value = entry.value,
-            display = entry.display,
-            ordinal = entry.ordinal,
-            description = entry.description,
-          }
-        end,
-      }),
-      sorter = conf.generic_sorter({}),
-      previewer = previewers.new_buffer_previewer({
-        define_preview = function(self, entry, _)
-          local lines = vim.split(entry.description, "\n", { plain = true })
-          vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
-        end,
-      }),
-      attach_mappings = function(prompt_bufnr, _)
-        actions.select_default:replace(function()
-          actions.close(prompt_bufnr)
-          local selection = action_state.get_selected_entry()
-          vim.fn.setreg("+", selection.value) -- Copy to clipboard (system clipboard "+")
-          vim.fn.setreg('"', selection.value) -- Copy to default register (unnamed register)
-          print("Copied to clipboard: " .. selection.value)
-        end)
-        return true
-      end,
-    })
-    :find()
+  utils.show_telescope_picker(entries, "Issue created")
 end
 
 -- create a setup command the user has to call to provide an api key to use

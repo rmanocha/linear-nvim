@@ -79,7 +79,6 @@ function M.create_issue(api_key, userid, teamid, title, description)
     teamid,
     userid
   )
-  print(query)
   -- Execute the query using the make_query function
   local data = make_query(api_key, query)
 
