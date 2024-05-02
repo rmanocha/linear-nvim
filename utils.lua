@@ -74,6 +74,8 @@ function M.escape_json_string(input_str)
   return input_str
 end
 
+-- @param entries table {display = string, value = string, ordinal = string, description = string}
+-- @param prompt_title string
 function M.show_telescope_picker(entries, prompt_title)
   pickers
     .new({}, {
