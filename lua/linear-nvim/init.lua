@@ -4,7 +4,7 @@ local key_store = require("linear-nvim.key-store")
 local utils = require("linear-nvim.utils")
 
 function M.setup()
-	M._client = linear_client:setup(key_store.get_api_key)
+	M.client = linear_client:setup(key_store.get_api_key)
 end
 
 local function show_issues_picker(issues)
@@ -59,11 +59,11 @@ end
 -- i.e. a panel
 
 function M.show_user_id()
-	print(M._client:get_user_id())
+	print(M.client:get_user_id())
 end
 
 function M.show_assigned_issues()
-	local issues = M._client:get_assigned_issues()
+	local issues = M.client:get_assigned_issues()
 
 	local issue_titles = {}
 	for _, issue in ipairs(issues) do
@@ -90,7 +90,7 @@ function M.create_issue()
 	if title == "" then
 		title = vim.fn.input("Enter the title of the issue: ")
 	end
-	local issue = M._client:create_issue(title, description)
+	local issue = M.client:create_issue(title, description)
 	if issue ~= nil then
 		print("Issue created successfully!")
 		show_create_issues_result_picker(issue)

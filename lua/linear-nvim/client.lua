@@ -36,12 +36,29 @@ function LinearClient:setup(callback_for_api_key)
 end
 
 function LinearClient:fetch_api_key()
-	if self._api_key == "" and self.callback_for_api_key then
+	if (not self._api_key or self._api_key == "") and self.callback_for_api_key then
 		self._api_key = self.callback_for_api_key()
 	end
 	return self._api_key
 end
 
+function LinearClient:fetch_team_id()
+	if not self._team_id or self._team_id == "" then
+		local teams = self:get_teams()
+		if teams ~= nil then
+			local options = {}
+			for i, team in ipairs(teams) do
+				table.insert(options, string.format("%d: %s", i, team.name))
+			end
+			local selected_team = vim.fn.inputlist(options)
+			self._team_id = teams[selected_team].id
+			print("Selected team " .. teams[selected_team].name .. " saved successfully!")
+		else
+			print("No team ID selected.")
+		end
+	end
+	return self._team_id
+end
 -- @param api_key string
 -- @return string
 function LinearClient:get_user_id()
@@ -104,7 +121,7 @@ function LinearClient:create_issue(title, description)
 		'{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
 		parsed_title,
 		--parsed_description,
-		self._team_id,
+		self:fetch_team_id(),
 		self:get_user_id()
 	)
 	-- Execute the query using the make_query function
