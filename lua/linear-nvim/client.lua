@@ -5,13 +5,7 @@ local utils = require("linear-nvim.utils")
 API_URL = "https://api.linear.app/graphql"
 LinearClient._api_key = ""
 LinearClient._team_id = ""
-
-function LinearClient:setup(api_key, team_id)
-	self._api_key = api_key
-	self._team_id = team_id
-
-	return self
-end
+LinearClient.callback_for_api_key = nil
 
 -- @param api_key string
 -- @param query string
@@ -36,11 +30,23 @@ local function make_query(api_key, query)
 	return data
 end
 
+function LinearClient:setup(callback_for_api_key)
+	self.callback_for_api_key = callback_for_api_key
+	return self
+end
+
+function LinearClient:fetch_api_key()
+	if self._api_key == "" and self.callback_for_api_key then
+		self._api_key = self.callback_for_api_key()
+	end
+	return self._api_key
+end
+
 -- @param api_key string
 -- @return string
 function LinearClient:get_user_id()
 	local query = '{ "query": "{ viewer { id name } }" }'
-	local data = make_query(self._api_key, query)
+	local data = make_query(self:fetch_api_key(), query)
 	if data and data.data and data.data.viewer and data.data.viewer.id then
 		return data.data.viewer.id
 	else
@@ -59,7 +65,7 @@ function LinearClient:get_assigned_issues()
 		self:get_user_id()
 	)
 	-- Execute the query using the make_query function
-	local data = make_query(self._api_key, query)
+	local data = make_query(self:fetch_api_key(), query)
 
 	-- Check the structure of the returned data and extract the necessary information
 	if data and data.data and data.data.user and data.data.user.assignedIssues then
@@ -75,7 +81,7 @@ function LinearClient:get_teams()
 	local query = '{ "query": "query { teams { nodes {id name }} }" }'
 
 	-- Execute the query using the make_query function
-	local data = make_query(self._api_key, query)
+	local data = make_query(self:fetch_api_key(), query)
 
 	-- Check the structure of the returned data and extract the necessary information
 	if data and data.data and data.data.teams and data.data.teams.nodes then
@@ -102,7 +108,7 @@ function LinearClient:create_issue(title, description)
 		self:get_user_id()
 	)
 	-- Execute the query using the make_query function
-	local data = make_query(self._api_key, query)
+	local data = make_query(self:fetch_api_key(), query)
 
 	-- Check the structure of the returned data and extract the necessary information
 	if

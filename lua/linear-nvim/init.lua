@@ -4,9 +4,7 @@ local key_store = require("linear-nvim.key-store")
 local utils = require("linear-nvim.utils")
 
 function M.setup()
-	local api_key = key_store.get_api_key()
-	local team_id = key_store.get_or_set_team_id()
-	M._client = linear_client:setup(api_key, team_id)
+	M._client = linear_client:setup(key_store.get_api_key)
 end
 
 local function show_issues_picker(issues)
