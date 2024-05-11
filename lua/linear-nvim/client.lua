@@ -1,25 +1,28 @@
-local M = {}
+local LinearClient = {}
 local curl = require("plenary.curl")
+local utils = require("linear-nvim.utils")
 
-M._api_url = "https://api.linear.app/graphql"
-M._api_key = ""
-M._team_id = ""
+API_URL = "https://api.linear.app/graphql"
+LinearClient._api_key = ""
+LinearClient._team_id = ""
 
-function M.setup(api_key, team_id)
-	M._api_key = api_key
-	M._team_id = team_id
+function LinearClient:setup(api_key, team_id)
+	self._api_key = api_key
+	self._team_id = team_id
+
+	return self
 end
 
--- @param token string
+-- @param api_key string
 -- @param query string
 -- @return table
-local function make_query(query)
+local function make_query(api_key, query)
 	local headers = {
-		["Authorization"] = M._api_key,
+		["Authorization"] = api_key,
 		["Content-Type"] = "application/json",
 	}
 
-	local resp = curl.post(M._api_url, {
+	local resp = curl.post(API_URL, {
 		body = query,
 		headers = headers,
 	})
@@ -35,9 +38,9 @@ end
 
 -- @param api_key string
 -- @return string
-function M.get_user_id()
+function LinearClient:get_user_id()
 	local query = '{ "query": "{ viewer { id name } }" }'
-	local data = make_query(query)
+	local data = make_query(self._api_key, query)
 	if data and data.data and data.data.viewer and data.data.viewer.id then
 		return data.data.viewer.id
 	else
@@ -49,14 +52,14 @@ end
 -- @param api_key string
 -- @param userid string
 -- @return table
-function M.get_assigned_issues(userid)
+function LinearClient:get_assigned_issues()
 	-- Correctly format the JSON query string to ensure valid JSON
 	local query = string.format(
 		'{"query": "query { user(id: \\"%s\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}',
-		userid
+		self:get_user_id()
 	)
 	-- Execute the query using the make_query function
-	local data = make_query(M._api_key, query)
+	local data = make_query(self._api_key, query)
 
 	-- Check the structure of the returned data and extract the necessary information
 	if data and data.data and data.data.user and data.data.user.assignedIssues then
@@ -67,12 +70,12 @@ function M.get_assigned_issues(userid)
 	end
 end
 
-function M.get_teams()
+function LinearClient:get_teams()
 	-- Correctly format the JSON query string to ensure valid JSON
 	local query = '{ "query": "query { teams { nodes {id name }} }" }'
 
 	-- Execute the query using the make_query function
-	local data = make_query(query)
+	local data = make_query(self._api_key, query)
 
 	-- Check the structure of the returned data and extract the necessary information
 	if data and data.data and data.data.teams and data.data.teams.nodes then
@@ -83,4 +86,38 @@ function M.get_teams()
 	end
 end
 
-return M
+-- @param title string
+-- @param description string
+function LinearClient:create_issue(title, description)
+	-- Correctly format the JSON query string to ensure valid JSON
+	local parsed_title = utils.escape_json_string(title)
+	--local parsed_description = utils.escape_json_string(description)
+	local query = string.format(
+		-- can't figure out how to send newlines in the description. skipping it for now
+		--'{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" description: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
+		'{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
+		parsed_title,
+		--parsed_description,
+		self._team_id,
+		self:get_user_id()
+	)
+	-- Execute the query using the make_query function
+	local data = make_query(self._api_key, query)
+
+	-- Check the structure of the returned data and extract the necessary information
+	if
+		data
+		and data.data
+		and data.data.issueCreate
+		and data.data.issueCreate.success
+		and data.data.issueCreate.success == true
+		and data.data.issueCreate.issue
+	then
+		return data.data.issueCreate.issue
+	else
+		print("Issue not found in response")
+		return nil
+	end
+end
+
+return LinearClient

@@ -3,6 +3,12 @@ local linear_client = require("linear-nvim.client")
 local key_store = require("linear-nvim.key-store")
 local utils = require("linear-nvim.utils")
 
+function M.setup()
+	local api_key = key_store.get_api_key()
+	local team_id = key_store.get_or_set_team_id()
+	M._client = linear_client:setup(api_key, team_id)
+end
+
 local function show_issues_picker(issues)
 	-- Prepare entries for the picker from the issues map
 	local entries = {}
@@ -55,16 +61,11 @@ end
 -- i.e. a panel
 
 function M.show_user_id()
-	local api_key = key_store.get_api_key()
-	local team_id = key_store.get_or_set_team_id()
-	linear_client.setup(api_key, team_id)
-	print(linear_client.get_user_id())
+	print(M._client:get_user_id())
 end
 
 function M.show_assigned_issues()
-	local api_key = key_store.get_api_key()
-	local user_id = linear_api.get_user_id(api_key)
-	local issues = linear_api.get_assigned_issues(api_key, user_id)
+	local issues = M._client:get_assigned_issues()
 
 	local issue_titles = {}
 	for _, issue in ipairs(issues) do
@@ -80,10 +81,6 @@ function M.show_assigned_issues()
 end
 
 function M.create_issue()
-	local api_key = key_store.get_api_key()
-	local user_id = linear_api.get_user_id(api_key)
-	local team_id = key_store.get_or_set_team_id()
-
 	local full_selection = utils.get_visual_selection()
 	local title, description = full_selection:match("([^\n]*)\n(.*)")
 
@@ -95,7 +92,7 @@ function M.create_issue()
 	if title == "" then
 		title = vim.fn.input("Enter the title of the issue: ")
 	end
-	local issue = linear_api.create_issue(api_key, user_id, team_id, title, description)
+	local issue = M._client:create_issue(title, description)
 	if issue ~= nil then
 		print("Issue created successfully!")
 		show_create_issues_result_picker(issue)
