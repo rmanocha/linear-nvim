@@ -30,6 +30,8 @@ local function make_query(api_key, query)
 	return data
 end
 
+-- @param callback_for_api_key function
+-- @return LinearClient
 function LinearClient:setup(callback_for_api_key)
 	self.callback_for_api_key = callback_for_api_key
 	return self

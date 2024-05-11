@@ -15,20 +15,21 @@ end
 
 function M.fetch_api_key()
 	local file = io.open(FILE_PATH, "r") -- Open the file for reading
+	local api_key = ""
 	if file then
-		local api_key = file:read("*a") -- Read the entire contents of the file
+		api_key = file:read("*a") -- Read the entire contents of the file
 		file:close()
 		-- strip all whitespace
 		api_key = string.gsub(api_key, "%s", "")
-		return api_key
 	else
-		local api_key = vim.fn.input("Enter your API key: ")
+		api_key = vim.fn.input("Enter your API key: ")
 		if api_key ~= "" then
 			save_api_key(api_key)
 		else
 			print("No API key entered.")
 		end
 	end
+	return api_key
 end
 
 return M
