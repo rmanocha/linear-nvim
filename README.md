@@ -52,3 +52,16 @@ vim.keymap.set("n", "<leader>mc", function()
   require("linear-nvim").create_issue()
 end)
 ```
+
+## Roadmap
+
+* Provide configuration options
+  * Change the default behavior from copy to something else (eg. open in browser)
+  * Pull more than 50 issues when trying to list them
+  * Add a default tag when creating new issues
+  * Filter down listed issues to a specific team
+* Integrate with a git plugin to automatically create the new branch (does lazygit support this?)
+* Add support to provide a description for newly created issues
+* Integrate with [folke/todo-comments.nvim](https://github.com/folke/todo-comments.nvim) to create issues from TODOs
+* Build a viewer to be able to see title, description etc. when hovering over a Linear issue identifier
+* Add tests
