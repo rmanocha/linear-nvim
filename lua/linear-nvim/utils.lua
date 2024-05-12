@@ -37,8 +37,9 @@ function M.get_visual_selection()
     --     true, false, true), "n", true)
     else
         -- otherwise, use the last known visual position
-        _, csrow, cscol, _ = unpack(vim.fn.getpos("'<"))
-        _, cerow, cecol, _ = unpack(vim.fn.getpos("'>"))
+        -- _, csrow, cscol, _ = unpack(vim.fn.getpos("'<"))
+        -- _, cerow, cecol, _ = unpack(vim.fn.getpos("'>"))
+        return ""
     end
     -- swap vars if needed
     if cerow < csrow then
