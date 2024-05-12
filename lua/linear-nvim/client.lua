@@ -37,6 +37,7 @@ function LinearClient:setup(callback_for_api_key)
 	return self
 end
 
+-- @return string
 function LinearClient:fetch_api_key()
 	if (not self._api_key or self._api_key == "") and self.callback_for_api_key then
 		self._api_key = self.callback_for_api_key()
@@ -44,6 +45,7 @@ function LinearClient:fetch_api_key()
 	return self._api_key
 end
 
+-- @return string
 function LinearClient:fetch_team_id()
 	if not self._team_id or self._team_id == "" then
 		local teams = self:get_teams()
@@ -61,7 +63,7 @@ function LinearClient:fetch_team_id()
 	end
 	return self._team_id
 end
--- @param api_key string
+
 -- @return string
 function LinearClient:get_user_id()
 	local query = '{ "query": "{ viewer { id name } }" }'
@@ -74,19 +76,14 @@ function LinearClient:get_user_id()
 	end
 end
 
--- @param api_key string
--- @param userid string
 -- @return table
 function LinearClient:get_assigned_issues()
-	-- Correctly format the JSON query string to ensure valid JSON
 	local query = string.format(
 		'{"query": "query { user(id: \\"%s\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}',
 		self:get_user_id()
 	)
-	-- Execute the query using the make_query function
 	local data = make_query(self:fetch_api_key(), query)
 
-	-- Check the structure of the returned data and extract the necessary information
 	if data and data.data and data.data.user and data.data.user.assignedIssues then
 		return data.data.user.assignedIssues.nodes
 	else
@@ -96,13 +93,10 @@ function LinearClient:get_assigned_issues()
 end
 
 function LinearClient:get_teams()
-	-- Correctly format the JSON query string to ensure valid JSON
 	local query = '{ "query": "query { teams { nodes {id name }} }" }'
 
-	-- Execute the query using the make_query function
 	local data = make_query(self:fetch_api_key(), query)
 
-	-- Check the structure of the returned data and extract the necessary information
 	if data and data.data and data.data.teams and data.data.teams.nodes then
 		return data.data.teams.nodes
 	else
@@ -114,7 +108,6 @@ end
 -- @param title string
 -- @param description string
 function LinearClient:create_issue(title, description)
-	-- Correctly format the JSON query string to ensure valid JSON
 	local parsed_title = utils.escape_json_string(title)
 	--local parsed_description = utils.escape_json_string(description)
 	local query = string.format(
@@ -126,10 +119,9 @@ function LinearClient:create_issue(title, description)
 		self:fetch_team_id(),
 		self:get_user_id()
 	)
-	-- Execute the query using the make_query function
+
 	local data = make_query(self:fetch_api_key(), query)
 
-	-- Check the structure of the returned data and extract the necessary information
 	if
 		data
 		and data.data
