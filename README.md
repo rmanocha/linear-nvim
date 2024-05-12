@@ -15,7 +15,7 @@ editor. These are the usecases linear-nvim is designed for.
 ```lua
 return {
   {
-    dir = "~/dev/linear-nvim",
+    "rmanocha/linear-nvim",
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-telescope/telescope.nvim",
