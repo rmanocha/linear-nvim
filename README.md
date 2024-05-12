@@ -1,5 +1,11 @@
 # Linear plugin for NeoVim
 
+## The problem
+You're working on a project where issues are managed in [Linear](https://linear.app/karma-horizons). 
+You want to browse issues assigned to you, read their description and copy the git branch name, all from within 
+NeoVim using keyboard shortcuts. In addition, you want to be able to quickly create issues, also from within your
+editor. These are the usecases linear-nvim is designed for.
+
 ## Installation
 * neovim 0.8.0+ required
 * Install using your favorite plugin manager. I'm using lazy.nvim in this case
