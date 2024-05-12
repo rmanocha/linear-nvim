@@ -35,7 +35,7 @@ return {
 TBD
 
 ## Usage
-There are only two primary use cases supported as of now
+There are two use cases supported as of now
 * You can fetch the 50 most recent issues assigned to you, search through the title/identifier of each of them, read it's description and copy the git branch of any one
 * You can create a new issue - only providing a title is supported as of now
   * Description is in the works, as soon as I can figure out how to send it successfully via the graphql API 
