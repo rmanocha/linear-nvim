@@ -6,7 +6,7 @@ You want to browse issues assigned to you, read their description and copy the g
 NeoVim using keyboard shortcuts. In addition, you want to be able to quickly create issues, also from within your
 editor. These are the usecases linear-nvim is designed for.
 
-<img width="1791" alt="Screenshot 2024-05-12 at 8 37 03 AM" src="https://github.com/rmanocha/linear-nvim/assets/4594/2c58b9f4-c5d1-48e2-8bca-c86db6fa1196">
+![Screen Recording 2024-05-13 at 9 11 05 AM](https://github.com/rmanocha/linear-nvim/assets/4594/e8e7d9ce-89e8-4d87-aa1d-c36479600ba3)
 
 
 
