@@ -48,7 +48,12 @@ function LinearClient:fetch_api_key()
     if
         (not self._api_key or self._api_key == "") and self.callback_for_api_key
     then
-        self._api_key = self.callback_for_api_key()
+        local api_key = self.callback_for_api_key()
+        if api_key ~= nil and api_key ~= "" then
+            self._api_key = api_key
+        else
+            print("API key not set.")
+        end
     end
     return self._api_key
 end

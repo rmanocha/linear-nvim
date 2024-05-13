@@ -64,6 +64,10 @@ end
 
 function M.show_assigned_issues()
     local issues = M.client:get_assigned_issues()
+    if not issues then
+        print("No issues found. Exiting...")
+        return
+    end
 
     local issue_titles = {}
     for _, issue in ipairs(issues) do

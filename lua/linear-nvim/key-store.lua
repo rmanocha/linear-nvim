@@ -27,6 +27,7 @@ function M.fetch_api_key()
             save_api_key(api_key)
         else
             print("No API key entered.")
+            return nil
         end
     end
     return api_key
