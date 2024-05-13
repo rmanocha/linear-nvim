@@ -58,17 +58,26 @@ function LinearClient:fetch_team_id()
     if not self._team_id or self._team_id == "" then
         local teams = self:get_teams()
         if teams ~= nil then
-            local options = {}
-            for i, team in ipairs(teams) do
-                table.insert(options, string.format("%d: %s", i, team.name))
+            if #teams == 1 then
+                self._team_id = teams[1].id
+                print(
+                    "Only one team found, using team "
+                        .. teams[1].name
+                        .. " automatically."
+                )
+            else
+                local options = {}
+                for i, team in ipairs(teams) do
+                    table.insert(options, string.format("%d: %s", i, team.name))
+                end
+                local selected_team = vim.fn.inputlist(options)
+                self._team_id = teams[selected_team].id
+                print(
+                    "Selected team "
+                        .. teams[selected_team].name
+                        .. " saved successfully!"
+                )
             end
-            local selected_team = vim.fn.inputlist(options)
-            self._team_id = teams[selected_team].id
-            print(
-                "Selected team "
-                    .. teams[selected_team].name
-                    .. " saved successfully!"
-            )
         else
             print("No team ID selected.")
         end
