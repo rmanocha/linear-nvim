@@ -36,9 +36,16 @@ TBD
 
 ## Usage
 There are two use cases supported as of now
-* You can fetch the 50 most recent issues assigned to you, search through the title/identifier of each of them, read it's description and copy the git branch of any one
-* You can create a new issue - only providing a title is supported as of now
-  * Description is in the works, as soon as I can figure out how to send it successfully via the graphql API 
+* Fetch issues assigned to you
+  * 50 most recent issues are returned
+  * You can search through them
+  * You can preview the description
+  * Copy the git branch name
+* You can create a new issue
+  * You will be prompted for the team to create the issue in (if you have multiple teams)
+  * You will also be prompted to enter a title for this issue
+  * Description is in the works, as soon as I can figure out how to send it successfully via the graphql API
+  * After the issue is created, you can copy the identifier, git branch name, url etc.
 
 ### Getting an API Key
 
@@ -50,6 +57,8 @@ You will be prompted to provide it the first time (post installation) the plugin
 We store the API key you provide in a plaintext file in `vim.fn.stdpath("data")`. You can always delete it there. Alternatively, you can simply revoke the key from Linear itself, if/when needed.
 
 ### Keymaps
+
+You can put these wherever you define your custom keymaps (eg. `lua/config/keymaps.lua`) if you're using [LazyVim](https://github.com/LazyVim/LazyVim))
 
 ```lua
 vim.keymap.set("n", "<leader>mm", function()
