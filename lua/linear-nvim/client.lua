@@ -171,14 +171,14 @@ end
 -- @param issue_id string
 function LinearClient:get_issue_details(issue_id)
     local query = string.format(
-        '{"query":"query Issue {issue(id: \\"%s\\") { id title description assignee {name} createdAt}}"}',
+        '{"query":"query { issue(id: \\"%s\\") { id title url description branchName identifier assignee {name} createdAt}}"}',
         issue_id
     )
 
     local data = make_query(self:fetch_api_key(), query)
 
-    if data and data.issue then
-        return data.issue
+    if data and data.data and data.data.issue then
+        return data.data.issue
     else
         vim.notify("Issue not found in response", vim.log.levels.ERROR)
         return nil

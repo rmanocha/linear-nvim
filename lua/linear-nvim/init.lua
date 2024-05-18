@@ -103,4 +103,12 @@ function M.create_issue()
     end
 end
 
+function M.show_issue_details(issue_id)
+    local issue = M.client:get_issue_details(issue_id)
+    if issue == nil then
+        return
+    end
+    show_create_issues_result_picker(issue)
+end
+
 return M
