@@ -81,6 +81,9 @@ end)
 vim.keymap.set("n", "<leader>mc", function()
   require("linear-nvim").create_issue()
 end)
+vim.keymap.set("n", "<leader>ms", function()
+  require("linear-nvim").show_issue_details()
+end)
 ```
 
 ## Roadmap
