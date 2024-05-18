@@ -32,7 +32,16 @@ return {
 ```
 
 ## Configuration
-TBD
+For now, only one configuration option is supported.
+
+```lua
+require("linear-nvim").setup({ issue_regex = "lin%-%d+"})
+```
+
+This `issue_regex` config is optional. It is required if you want to view issue details.
+Set this to a regex that will match against the issue number format for your Linear workspace.
+Once this is set, you can call `show_issue_details()` to view the details of the issue
+ number under the cursor
 
 ## Usage
 There are two use cases supported as of now
@@ -46,6 +55,8 @@ There are two use cases supported as of now
   * You will also be prompted to enter a title for this issue
   * Description is in the works, as soon as I can figure out how to send it successfully via the graphql API
   * After the issue is created, you can copy the identifier, git branch name, url etc.
+* View issue details
+  * Move your cursor to an issue number in your buffer and call `show_issue_details()` to view details about this issue.
 
 ### Getting an API Key
 
