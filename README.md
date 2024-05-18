@@ -93,5 +93,5 @@ end)
 * Integrate with a git plugin to automatically create the new branch (does lazygit support this?)
 * Add support to provide a description for newly created issues
 * Integrate with [folke/todo-comments.nvim](https://github.com/folke/todo-comments.nvim) to create issues from TODOs
-* Build a viewer to be able to see title, description etc. when hovering over a Linear issue identifier
+* ~~Build a viewer to be able to see title, description etc. when hovering over a Linear issue identifier~~
 * Add tests
