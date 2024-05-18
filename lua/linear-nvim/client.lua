@@ -168,4 +168,21 @@ function LinearClient:create_issue(title, description)
     end
 end
 
+-- @param issue_id string
+function LinearClient:get_issue_details(issue_id)
+    local query = string.format(
+        '{"query":"query Issue {issue(id: \\"%s\\") { id title description assignee {name} createdAt}}"}',
+        issue_id
+    )
+
+    local data = make_query(self:fetch_api_key(), query)
+
+    if data and data.issue then
+        return data.issue
+    else
+        vim.notify("Issue not found in response", vim.log.levels.ERROR)
+        return nil
+    end
+end
+
 return LinearClient
