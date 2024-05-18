@@ -13,6 +13,7 @@ local defaults = {
 
 -- @param options LinearNvimOptions
 function M.setup(options)
+    options = options or {}
     M.client = linear_client:setup(key_store.fetch_api_key)
     M.options = vim.tbl_deep_extend("force", defaults, options)
 end
