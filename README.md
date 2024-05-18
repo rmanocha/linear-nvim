@@ -44,7 +44,7 @@ Once this is set, you can call `show_issue_details()` to view the details of the
  number under the cursor
 
 ## Usage
-There are two use cases supported as of now
+The following use cases are supported as of now
 * Fetch issues assigned to you
   * 50 most recent issues are returned
   * You can search through them
