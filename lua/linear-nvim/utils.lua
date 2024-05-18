@@ -121,4 +121,8 @@ function M.show_telescope_picker(entries, prompt_title)
         :find()
 end
 
+function M.get_current_word()
+    return vim.fn.expand("<cWORD>")
+end
+
 return M

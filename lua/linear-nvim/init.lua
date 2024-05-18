@@ -103,7 +103,9 @@ function M.create_issue()
     end
 end
 
-function M.show_issue_details(issue_id)
+function M.show_issue_details()
+    local issue_id = utils.escape_json_string(utils.get_current_word())
+    -- kar-1303
     local issue = M.client:get_issue_details(issue_id)
     if issue == nil then
         return
