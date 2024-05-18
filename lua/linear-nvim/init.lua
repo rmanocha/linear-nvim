@@ -3,8 +3,18 @@ local linear_client = require("linear-nvim.client")
 local key_store = require("linear-nvim.key-store")
 local utils = require("linear-nvim.utils")
 
-function M.setup()
+-- @type LinearNvimOptions
+M.options = {}
+
+--- @class LinearNvimOptions
+local defaults = {
+    issue_regex = "",
+}
+
+-- @param options LinearNvimOptions
+function M.setup(options)
     M.client = linear_client:setup(key_store.fetch_api_key)
+    M.options = vim.tbl_deep_extend("force", defaults, options)
 end
 
 local function show_issues_picker(issues)
@@ -105,7 +115,11 @@ end
 
 function M.show_issue_details()
     local issue_id = utils.get_current_word()
-    if not string.match(issue_id, "lin%-%d+") then
+    if not M.options.issue_regex or M.options.issue_regex == "" then
+        vim.notify("Issue regex not set", vim.log.levels.WARN)
+        return
+    end
+    if not string.match(issue_id, M.options.issue_regex) then
         vim.notify("Not a valid issue ID: " .. issue_id, vim.log.levels.WARN)
         return
     end
