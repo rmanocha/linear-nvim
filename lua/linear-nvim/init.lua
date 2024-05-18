@@ -104,7 +104,11 @@ function M.create_issue()
 end
 
 function M.show_issue_details()
-    local issue_id = utils.escape_json_string(utils.get_current_word())
+    local issue_id = utils.get_current_word()
+    if not string.match(issue_id, "lin%-%d+") then
+        vim.notify("Not a valid issue ID: " .. issue_id, vim.log.levels.WARN)
+        return
+    end
     -- kar-1303
     local issue = M.client:get_issue_details(issue_id)
     if issue == nil then
