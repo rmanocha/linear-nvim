@@ -6,6 +6,7 @@ API_URL = "https://api.linear.app/graphql"
 LinearClient._api_key = ""
 LinearClient._team_id = ""
 LinearClient.callback_for_api_key = nil
+LinearClient._issue_fields = nil
 
 -- @param api_key string
 -- @param query string
@@ -37,9 +38,12 @@ local function make_query(api_key, query)
 end
 
 -- @param callback_for_api_key function
+-- @param issue_fields string[]
 -- @return LinearClient
-function LinearClient:setup(callback_for_api_key)
+function LinearClient:setup(callback_for_api_key, issue_fields)
     self.callback_for_api_key = callback_for_api_key
+    self._issue_fields = issue_fields
+
     return self
 end
 
@@ -140,15 +144,18 @@ end
 -- @param description string
 function LinearClient:create_issue(title, description)
     local parsed_title = utils.escape_json_string(title)
+    local issue_fields_query = table.concat(self._issue_fields, " ")
     --local parsed_description = utils.escape_json_string(description)
     local query = string.format(
         -- can't figure out how to send newlines in the description. skipping it for now
         --'{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" description: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
-        '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
+        -- '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
+        '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { %s } } }"}',
         parsed_title,
         --parsed_description,
         self:fetch_team_id(),
-        self:get_user_id()
+        self:get_user_id(),
+        issue_fields_query
     )
 
     local data = make_query(self:fetch_api_key(), query)
@@ -163,16 +170,18 @@ function LinearClient:create_issue(title, description)
     then
         return data.data.issueCreate.issue
     else
-        print("Issue not found in response")
+        vim.notify("Issue not found in response", vim.log.levels.ERROR)
         return nil
     end
 end
 
 -- @param issue_id string
 function LinearClient:get_issue_details(issue_id)
+    local issue_fields_query = table.concat(self._issue_fields, " ")
     local query = string.format(
-        '{"query":"query { issue(id: \\"%s\\") { id title url description branchName identifier assignee {name} createdAt}}"}',
-        issue_id
+        '{"query":"query { issue(id: \\"%s\\") { %s }}"}',
+        issue_id,
+        issue_fields_query
     )
 
     local data = make_query(self:fetch_api_key(), query)

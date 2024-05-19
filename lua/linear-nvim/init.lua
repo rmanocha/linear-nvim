@@ -6,16 +6,35 @@ local utils = require("linear-nvim.utils")
 -- @type LinearNvimOptions
 M.options = {}
 
+--- @class LinearNvimIssueFields
+M._issue_fields = {
+    url = "Issue URL",
+    branchName = "Branch Name",
+    title = "Issue Title",
+    identifier = "Issue Identifier",
+    description = "Issue Description",
+    id = "Issue ID",
+}
+
 --- @class LinearNvimOptions
 local defaults = {
     issue_regex = "",
+    issue_fields = {
+        "url",
+        "branchName",
+        "title",
+        "identifier",
+        "description",
+        "id",
+    },
 }
 
 -- @param options LinearNvimOptions
 function M.setup(options)
     options = options or {}
-    M.client = linear_client:setup(key_store.fetch_api_key)
     M.options = vim.tbl_deep_extend("force", defaults, options)
+    M.client =
+        linear_client:setup(key_store.fetch_api_key, M.options.issue_fields)
 end
 
 local function show_issues_picker(issues)
@@ -33,37 +52,28 @@ local function show_issues_picker(issues)
     utils.show_telescope_picker(entries, "Issues")
 end
 
-local function show_create_issues_result_picker(issue)
-    local entries = {
-        {
-            value = issue.url,
-            display = "Copy Issue URL",
-            ordinal = "Copy Issue URL",
-            description = issue.url,
-        },
-        {
-            value = issue.branchName,
-            display = "Copy Branch Name",
-            ordinal = "Copy Branch Name",
-            description = issue.branchName,
-        },
-        {
-            value = issue.title,
-            display = "Copy Issue Title",
-            ordinal = "Copy Issue Title",
-            description = issue.title,
-        },
-        {
-            value = issue.identifier,
-            display = "Copy Issue Identifier",
-            ordinal = "Copy Issue Identifier",
-            description = issue.identifier,
-        },
-    }
+-- @param issue table
+-- @param issue_fields string[]
+local function show_create_issues_result_picker(issue, issue_fields)
+    local entries = {}
+
+    for _, key in ipairs(issue_fields) do
+        if issue[key] then
+            local issue_desc = issue[key]
+            if issue[key] == vim.NIL or issue[key] == nil then
+                issue_desc = "No data avaialble"
+            end
+            table.insert(entries, {
+                value = issue_desc,
+                display = "Copy " .. M._issue_fields[key],
+                ordinal = "Copy " .. M._issue_fields[key],
+                description = issue_desc,
+            })
+        end
+    end
 
     utils.show_telescope_picker(entries, "Issue created")
 end
-
 -- create a setup command the user has to call to provide an api key to use
 -- once this key is saved, we can then setup key commands to trigger fetching
 -- issues from Linear and display them in something similar to neotree or neotest
@@ -108,7 +118,7 @@ function M.create_issue()
     local issue = M.client:create_issue(title, description)
     if issue ~= nil then
         print("Issue created successfully!")
-        show_create_issues_result_picker(issue)
+        show_create_issues_result_picker(issue, M.options.issue_fields)
     else
         print("Failed to create issue")
     end
@@ -129,7 +139,7 @@ function M.show_issue_details()
     if issue == nil then
         return
     end
-    show_create_issues_result_picker(issue)
+    show_create_issues_result_picker(issue, M.options.issue_fields)
 end
 
 return M
