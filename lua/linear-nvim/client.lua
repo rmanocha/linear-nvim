@@ -1,3 +1,5 @@
+--- @class LinearClient
+--- @field callback_for_api_key function
 local LinearClient = {}
 local curl = require("plenary.curl")
 local utils = require("linear-nvim.utils")
@@ -8,9 +10,9 @@ LinearClient._team_id = ""
 LinearClient.callback_for_api_key = nil
 LinearClient._issue_fields = nil
 
--- @param api_key string
--- @param query string
--- @return table
+--- @param api_key string
+--- @param query string
+--- @return table?
 local function make_query(api_key, query)
     local headers = {
         ["Authorization"] = api_key,
@@ -37,9 +39,9 @@ local function make_query(api_key, query)
     return data
 end
 
--- @param callback_for_api_key function
--- @param issue_fields string[]
--- @return LinearClient
+--- @param callback_for_api_key function
+--- @param issue_fields string[]
+--- @return LinearClient
 function LinearClient:setup(callback_for_api_key, issue_fields)
     self.callback_for_api_key = callback_for_api_key
     self._issue_fields = issue_fields
@@ -47,7 +49,7 @@ function LinearClient:setup(callback_for_api_key, issue_fields)
     return self
 end
 
--- @return string
+--- @return string
 function LinearClient:fetch_api_key()
     if
         (not self._api_key or self._api_key == "") and self.callback_for_api_key
@@ -62,7 +64,7 @@ function LinearClient:fetch_api_key()
     return self._api_key
 end
 
--- @return string
+--- @return string
 function LinearClient:fetch_team_id()
     if not self._team_id or self._team_id == "" then
         local teams = self:get_teams()
@@ -94,7 +96,7 @@ function LinearClient:fetch_team_id()
     return self._team_id
 end
 
--- @return string
+--- @return string?
 function LinearClient:get_user_id()
     local query = '{ "query": "{ viewer { id name } }" }'
     local data = make_query(self:fetch_api_key(), query)
@@ -106,7 +108,7 @@ function LinearClient:get_user_id()
     end
 end
 
--- @return table
+--- @return table?
 function LinearClient:get_assigned_issues()
     local query = string.format(
         '{"query": "query { user(id: \\"%s\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}',
@@ -127,6 +129,7 @@ function LinearClient:get_assigned_issues()
     end
 end
 
+--- @return table?
 function LinearClient:get_teams()
     local query = '{ "query": "query { teams { nodes {id name }} }" }'
 
@@ -140,8 +143,9 @@ function LinearClient:get_teams()
     end
 end
 
--- @param title string
--- @param description string
+--- @param title string
+--- @param description string
+--- @return table?
 function LinearClient:create_issue(title, description)
     local parsed_title = utils.escape_json_string(title)
     local issue_fields_query = table.concat(self._issue_fields, " ")
@@ -175,7 +179,8 @@ function LinearClient:create_issue(title, description)
     end
 end
 
--- @param issue_id string
+--- @param issue_id string
+--- @return table?
 function LinearClient:get_issue_details(issue_id)
     local issue_fields_query = table.concat(self._issue_fields, " ")
     local query = string.format(

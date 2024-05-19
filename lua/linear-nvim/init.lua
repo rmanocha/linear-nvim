@@ -3,7 +3,7 @@ local linear_client = require("linear-nvim.client")
 local key_store = require("linear-nvim.key-store")
 local utils = require("linear-nvim.utils")
 
--- @type LinearNvimOptions
+--- @type LinearNvimOptions
 M.options = {}
 
 --- @class LinearNvimIssueFields
@@ -29,7 +29,7 @@ local defaults = {
     },
 }
 
--- @param options LinearNvimOptions
+--- @param options LinearNvimOptions
 function M.setup(options)
     options = options or {}
     M.options = vim.tbl_deep_extend("force", defaults, options)
@@ -37,6 +37,7 @@ function M.setup(options)
         linear_client:setup(key_store.fetch_api_key, M.options.issue_fields)
 end
 
+--- @param issues table
 local function show_issues_picker(issues)
     -- Prepare entries for the picker from the issues map
     local entries = {}
@@ -52,8 +53,8 @@ local function show_issues_picker(issues)
     utils.show_telescope_picker(entries, "Issues")
 end
 
--- @param issue table
--- @param issue_fields string[]
+--- @param issue table
+--- @param issue_fields string[]
 local function show_create_issues_result_picker(issue, issue_fields)
     local entries = {}
 
