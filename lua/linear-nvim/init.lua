@@ -131,12 +131,13 @@ function M.show_issue_details()
         vim.notify("Issue regex not set", vim.log.levels.WARN)
         return
     end
-    if not string.match(issue_id, M.options.issue_regex) then
+
+    local parsed_issue_id = string.match(issue_id, M.options.issue_regex)
+    if not parsed_issue_id then
         vim.notify("Not a valid issue ID: " .. issue_id, vim.log.levels.WARN)
         return
     end
-    -- kar-1303
-    local issue = M.client:get_issue_details(issue_id)
+    local issue = M.client:get_issue_details(parsed_issue_id)
     if issue == nil then
         return
     end
