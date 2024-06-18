@@ -9,6 +9,7 @@ LinearClient._api_key = ""
 LinearClient._team_id = ""
 LinearClient.callback_for_api_key = nil
 LinearClient._issue_fields = nil
+LinearClient._default_labels = {}
 
 --- @param api_key string
 --- @param query string
@@ -41,10 +42,12 @@ end
 
 --- @param callback_for_api_key function
 --- @param issue_fields string[]
+--- @param default_labels? string[]
 --- @return LinearClient
-function LinearClient:setup(callback_for_api_key, issue_fields)
+function LinearClient:setup(callback_for_api_key, issue_fields, default_labels)
     self.callback_for_api_key = callback_for_api_key
     self._issue_fields = issue_fields
+    self._default_labels = default_labels or {}
 
     return self
 end
@@ -143,18 +146,29 @@ function LinearClient:get_teams()
     end
 end
 
+--- @param labels string[]
+--- @return string
+local function convertDefaultLabelsToGQLArray(labels)
+    local labelArray = {}
+    for _, label in ipairs(labels) do
+        table.insert(labelArray, string.format('\\"%s\\"', label))
+    end
+    return string.format("[%s]", table.concat(labelArray, ","))
+end
+
 --- @param title string
 --- @param description string
 --- @return table?
 function LinearClient:create_issue(title, description)
     local parsed_title = utils.escape_json_string(title)
     local issue_fields_query = table.concat(self._issue_fields, " ")
+    local labels_to_attach = convertDefaultLabelsToGQLArray({ "bug" })
     --local parsed_description = utils.escape_json_string(description)
     local query = string.format(
         -- can't figure out how to send newlines in the description. skipping it for now
         --'{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" description: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
         -- '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
-        '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { %s } } }"}',
+        '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\" labelIds: []}) { success issue { %s } } }"}',
         parsed_title,
         --parsed_description,
         self:fetch_team_id(),

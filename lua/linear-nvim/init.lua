@@ -4,7 +4,11 @@ local key_store = require("linear-nvim.key-store")
 local utils = require("linear-nvim.utils")
 
 --- @type LinearNvimOptions
-M.options = {}
+M.options = {
+    issue_regex = "",
+    issue_fields = {},
+    default_label_ids = {},
+}
 
 --- @class LinearNvimIssueFields
 M._issue_fields = {
@@ -27,6 +31,7 @@ local defaults = {
         "description",
         "id",
     },
+    default_label_ids = {},
 }
 
 --- @param options LinearNvimOptions
