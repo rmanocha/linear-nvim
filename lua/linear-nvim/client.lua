@@ -162,17 +162,19 @@ end
 function LinearClient:create_issue(title, description)
     local parsed_title = utils.escape_json_string(title)
     local issue_fields_query = table.concat(self._issue_fields, " ")
-    local labels_to_attach = convertDefaultLabelsToGQLArray({ "bug" })
+    local labels_to_attach =
+        convertDefaultLabelsToGQLArray(self._default_labels)
     --local parsed_description = utils.escape_json_string(description)
     local query = string.format(
         -- can't figure out how to send newlines in the description. skipping it for now
         --'{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" description: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
         -- '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
-        '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\" labelIds: []}) { success issue { %s } } }"}',
+        '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\" labelIds: %s}) { success issue { %s } } }"}',
         parsed_title,
         --parsed_description,
         self:fetch_team_id(),
         self:get_user_id(),
+        labels_to_attach,
         issue_fields_query
     )
 

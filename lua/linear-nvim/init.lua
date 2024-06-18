@@ -38,8 +38,11 @@ local defaults = {
 function M.setup(options)
     options = options or {}
     M.options = vim.tbl_deep_extend("force", defaults, options)
-    M.client =
-        linear_client:setup(key_store.fetch_api_key, M.options.issue_fields)
+    M.client = linear_client:setup(
+        key_store.fetch_api_key,
+        M.options.issue_fields,
+        M.options.default_label_ids
+    )
 end
 
 --- @param issues table
