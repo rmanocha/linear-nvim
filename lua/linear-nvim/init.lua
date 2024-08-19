@@ -124,13 +124,17 @@ function M.create_issue()
     if title == "" then
         title = vim.fn.input("Enter the title of the issue: ")
     end
-    local issue = M.client:create_issue(title, description)
-    if issue ~= nil then
-        print("Issue created successfully!")
-        show_create_issues_result_picker(issue, M.options.issue_fields)
-    else
-        print("Failed to create issue")
+    if title == "" then
+        return
     end
+    M.client:create_issue(title, description, function(issue)
+        if issue ~= nil then
+            vim.notify("Issue created successfully", vim.log.levels.INFO)
+            show_create_issues_result_picker(issue, M.options.issue_fields)
+        else
+            vim.notify("Failed to create issue", vim.log.levels.ERROR)
+        end
+    end)
 end
 
 function M.show_issue_details()

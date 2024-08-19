@@ -67,36 +67,55 @@ function LinearClient:fetch_api_key()
     return self._api_key
 end
 
---- @return string
-function LinearClient:fetch_team_id()
-    if not self._team_id or self._team_id == "" then
-        local teams = self:get_teams()
-        if teams ~= nil then
-            if #teams == 1 then
-                self._team_id = teams[1].id
-                print(
-                    "Only one team found, using team "
-                        .. teams[1].name
-                        .. " automatically."
-                )
-            else
-                local options = {}
-                for i, team in ipairs(teams) do
-                    table.insert(options, string.format("%d: %s", i, team.name))
-                end
-                local selected_team = vim.fn.inputlist(options)
-                self._team_id = teams[selected_team].id
-                print(
-                    "Selected team "
-                        .. teams[selected_team].name
-                        .. " saved successfully!"
-                )
-            end
-        else
-            print("No team ID selected.")
-        end
+--- @param callback function
+function LinearClient:fetch_team_id(callback)
+    if self._team_id and self._team_id ~= "" then
+        callback(self._team_id)
+        return
     end
-    return self._team_id
+
+    local teams = self:get_teams()
+    if teams == nil then
+        vim.notify("No teams found.", vim.log.levels.ERROR)
+        callback(nil)
+        return
+    end
+
+    if #teams == 1 then
+        self._team_id = teams[1].id
+        vim.notify(
+            "Only one team found, using team "
+                .. teams[1].name
+                .. " automatically.",
+            vim.log.levels.INFO
+        )
+        callback(self._team_id)
+        return
+    end
+
+    local team_options = {}
+    for _, team in ipairs(teams) do
+        table.insert(team_options, { text = team.name, id = team.id })
+    end
+
+    vim.ui.select(team_options, {
+        prompt = "Select a team:",
+        format_item = function(item)
+            return item.text
+        end,
+    }, function(choice)
+        if choice then
+            self._team_id = choice.id
+            vim.notify(
+                "Selected team " .. choice.text .. " saved successfully!",
+                vim.log.levels.INFO
+            )
+            callback(self._team_id)
+        else
+            vim.notify("Team selection cancelled.", vim.log.levels.WARN)
+            callback(nil)
+        end
+    end)
 end
 
 --- @return string?
@@ -158,41 +177,52 @@ end
 
 --- @param title string
 --- @param description string
---- @return table?
-function LinearClient:create_issue(title, description)
+--- @param callback function(issue: table?)
+function LinearClient:create_issue(title, description, callback)
     local parsed_title = utils.escape_json_string(title)
     local issue_fields_query = table.concat(self._issue_fields, " ")
     local labels_to_attach =
         convertDefaultLabelsToGQLArray(self._default_labels)
-    --local parsed_description = utils.escape_json_string(description)
-    local query = string.format(
-        -- can't figure out how to send newlines in the description. skipping it for now
-        --'{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" description: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
-        -- '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\"}) { success issue { id title identifier branchName url} } }"}',
-        '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\" labelIds: %s}) { success issue { %s } } }"}',
-        parsed_title,
-        --parsed_description,
-        self:fetch_team_id(),
-        self:get_user_id(),
-        labels_to_attach,
-        issue_fields_query
-    )
+    local user_id = self:get_user_id()
 
-    local data = make_query(self:fetch_api_key(), query)
-
-    if
-        data
-        and data.data
-        and data.data.issueCreate
-        and data.data.issueCreate.success
-        and data.data.issueCreate.success == true
-        and data.data.issueCreate.issue
-    then
-        return data.data.issueCreate.issue
-    else
-        vim.notify("Issue not found in response", vim.log.levels.ERROR)
-        return nil
+    if not user_id then
+        vim.notify("Failed to get user ID", vim.log.levels.ERROR)
+        callback(nil)
+        return
     end
+
+    self:fetch_team_id(function(team_id)
+        if not team_id then
+            vim.notify("Failed to get team ID", vim.log.levels.ERROR)
+            callback(nil)
+            return
+        end
+
+        local query = string.format(
+            '{"query": "mutation IssueCreate { issueCreate(input: {title: \\"%s\\" teamId: \\"%s\\" assigneeId: \\"%s\\" labelIds: %s}) { success issue { %s } } }"}',
+            parsed_title,
+            team_id,
+            user_id,
+            labels_to_attach,
+            issue_fields_query
+        )
+
+        local data = make_query(self:fetch_api_key(), query)
+
+        if
+            data
+            and data.data
+            and data.data.issueCreate
+            and data.data.issueCreate.success
+            and data.data.issueCreate.success == true
+            and data.data.issueCreate.issue
+        then
+            callback(data.data.issueCreate.issue)
+        else
+            vim.notify("Issue not found in response", vim.log.levels.ERROR)
+            callback(nil)
+        end
+    end)
 end
 
 --- @param issue_id string
