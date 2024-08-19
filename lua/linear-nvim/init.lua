@@ -2,6 +2,7 @@ local M = {}
 local linear_client = require("linear-nvim.client")
 local key_store = require("linear-nvim.key-store")
 local utils = require("linear-nvim.utils")
+local log = require("plenary.log")
 
 --- @type LinearNvimOptions
 M.options = {
@@ -32,6 +33,7 @@ local defaults = {
         "id",
     },
     default_label_ids = {},
+    log_level = "warn",
 }
 
 --- @param options LinearNvimOptions
@@ -43,6 +45,11 @@ function M.setup(options)
         M.options.issue_fields,
         M.options.default_label_ids
     )
+    log.new({
+        plugin = "linear-nvim",
+        use_console = "async",
+        level = M.options.log_level,
+    }, true)
 end
 
 --- @param issues table
@@ -95,7 +102,7 @@ end
 function M.show_assigned_issues()
     local issues = M.client:get_assigned_issues()
     if not issues then
-        print("No issues found. Exiting...")
+        log.warn("No issues found. Exiting...")
         return
     end
 
@@ -125,6 +132,7 @@ function M.create_issue()
         title = vim.fn.input("Enter the title of the issue: ")
     end
     if title == "" then
+        log.warn("No title provided. Not creating an issue")
         return
     end
     M.client:create_issue(title, description, function(issue)

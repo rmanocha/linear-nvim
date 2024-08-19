@@ -2,6 +2,7 @@
 --- @field callback_for_api_key function
 local LinearClient = {}
 local curl = require("plenary.curl")
+local log = require("plenary.log")
 local utils = require("linear-nvim.utils")
 
 API_URL = "https://api.linear.app/graphql"
@@ -26,7 +27,7 @@ local function make_query(api_key, query)
     })
 
     if resp.status ~= 200 then
-        print(
+        log.error(
             string.format(
                 "Failed to fetch data: HTTP status %s, Response body: %s",
                 resp.status,
@@ -61,7 +62,7 @@ function LinearClient:fetch_api_key()
         if api_key ~= nil and api_key ~= "" then
             self._api_key = api_key
         else
-            print("API key not set.")
+            log.error("API key not set.")
         end
     end
     return self._api_key
@@ -77,13 +78,14 @@ function LinearClient:fetch_team_id(callback)
     local teams = self:get_teams()
     if teams == nil then
         vim.notify("No teams found.", vim.log.levels.ERROR)
+        log.error("No teams found.", vim.log.levels.ERROR)
         callback(nil)
         return
     end
 
     if #teams == 1 then
         self._team_id = teams[1].id
-        vim.notify(
+        log.info(
             "Only one team found, using team "
                 .. teams[1].name
                 .. " automatically.",
@@ -110,9 +112,14 @@ function LinearClient:fetch_team_id(callback)
                 "Selected team " .. choice.text .. " saved successfully!",
                 vim.log.levels.INFO
             )
+            log.info(
+                "Selected team " .. choice.text .. " saved successfully!",
+                vim.log.levels.INFO
+            )
             callback(self._team_id)
         else
             vim.notify("Team selection cancelled.", vim.log.levels.WARN)
+            log.warn("Team selection cancelled.")
             callback(nil)
         end
     end)
@@ -125,7 +132,7 @@ function LinearClient:get_user_id()
     if data and data.data and data.data.viewer and data.data.viewer.id then
         return data.data.viewer.id
     else
-        print("ID not found in response")
+        log.error("User ID not found in response")
         return nil
     end
 end
@@ -146,7 +153,7 @@ function LinearClient:get_assigned_issues()
     then
         return data.data.user.assignedIssues.nodes
     else
-        print("Assigned issues not found in response")
+        log.error("Assigned issues not found in response")
         return nil
     end
 end
@@ -160,7 +167,7 @@ function LinearClient:get_teams()
     if data and data.data and data.data.teams and data.data.teams.nodes then
         return data.data.teams.nodes
     else
-        print("No teams found")
+        log.error("No teams found")
         return nil
     end
 end

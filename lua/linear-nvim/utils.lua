@@ -5,6 +5,7 @@ local conf = require("telescope.config").values
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local previewers = require("telescope.previewers")
+local log = require("plenary.log")
 
 local M = {}
 
@@ -113,7 +114,7 @@ function M.show_telescope_picker(entries, prompt_title)
                     local selection = action_state.get_selected_entry()
                     vim.fn.setreg("+", selection.value) -- Copy to clipboard (system clipboard "+")
                     vim.fn.setreg('"', selection.value) -- Copy to default register (unnamed register)
-                    print("Copied to clipboard: " .. selection.value)
+                    log.debug("Copied to clipboard: " .. selection.value)
                 end)
                 return true
             end,

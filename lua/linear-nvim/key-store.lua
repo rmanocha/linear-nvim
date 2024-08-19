@@ -1,3 +1,4 @@
+local log = require("plenary.log")
 local M = {}
 
 local FILENAME = "/linear_api_key.txt"
@@ -9,7 +10,7 @@ local function save_api_key(api_key)
         file:write(api_key)
         file:close()
     else
-        print("Failed to open file for saving API key")
+        log.warn("Failed to open file for saving API key")
     end
 end
 
@@ -26,7 +27,7 @@ function M.fetch_api_key()
         if api_key ~= "" then
             save_api_key(api_key)
         else
-            print("No API key entered.")
+            log.warn("No API key entered.")
             return nil
         end
     end
