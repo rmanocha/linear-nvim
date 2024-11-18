@@ -1,5 +1,5 @@
-local mock = require("luassert.mock")
 local stub = require("luassert.stub")
+local assert = require("luassert")
 
 describe("key-store", function()
     local key_store = require("linear-nvim.key-store")
