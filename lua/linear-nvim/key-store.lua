@@ -25,6 +25,7 @@ function M.fetch_api_key()
     else
         api_key = vim.fn.input("Enter your API key: ")
         if api_key == nil or api_key == "" then
+            log.warn("No API key entered")
             return nil
         end
         save_api_key(api_key)

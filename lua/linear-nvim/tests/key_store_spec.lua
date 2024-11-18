@@ -7,6 +7,9 @@ describe("key-store", function()
     local mock_file_content = nil
     local io_open_stub
 
+    -- Mock the plenary log
+    local log_stub
+
     local function create_mock_file(content)
         return {
             read = function()
@@ -22,10 +25,15 @@ describe("key-store", function()
     before_each(function()
         mock_file_content = nil
         io_open_stub = stub(io, "open")
+        -- Create a stub for the log.warn function
+        log_stub = stub(require("plenary.log"), "warn")
     end)
 
     after_each(function()
         io_open_stub:revert()
+        if log_stub then
+            log_stub:revert()
+        end
     end)
 
     it("should prompt for API key if file doesn't exist", function()
