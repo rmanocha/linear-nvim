@@ -4,20 +4,39 @@ local assert = require("luassert")
 describe("key-store", function()
     local key_store = require("linear-nvim.key-store")
     local test_api_key = "test_key_123"
-    local test_file_path = vim.fn.stdpath("data") .. "/linear_api_key.txt"
+    local mock_file_content = nil
+    local io_open_stub
+
+    local function create_mock_file(content)
+        return {
+            read = function()
+                return content
+            end,
+            write = function(_, data)
+                mock_file_content = data
+            end,
+            close = function() end,
+        }
+    end
 
     before_each(function()
-        -- Clean up any existing test file
-        os.remove(test_file_path)
+        mock_file_content = nil
+        io_open_stub = stub(io, "open")
     end)
 
     after_each(function()
-        -- Clean up after each test
-        os.remove(test_file_path)
+        io_open_stub:revert()
     end)
 
     it("should prompt for API key if file doesn't exist", function()
-        -- Mock vim.fn.input
+        -- Setup mocks
+        io_open_stub
+            .on_call_with(vim.fn.stdpath("data") .. "/linear_api_key.txt", "r")
+            .returns(nil) -- File doesn't exist
+        io_open_stub
+            .on_call_with(vim.fn.stdpath("data") .. "/linear_api_key.txt", "w")
+            .returns(create_mock_file())
+
         local input_stub = stub(vim.fn, "input", function()
             return test_api_key
         end)
@@ -28,19 +47,21 @@ describe("key-store", function()
         assert.stub(input_stub).was_called()
         -- Verify returned key matches input
         assert.equals(test_api_key, result)
+        -- Verify key was saved
+        assert.equals(test_api_key, mock_file_content)
 
-        -- Verify key was saved to file
-        local file = io.open(test_file_path, "r")
-        local saved_key = file:read("*a")
-        file:close()
-        assert.equals(test_api_key, saved_key)
-
-        -- Restore original input function
         input_stub:revert()
     end)
 
     it("should return nil if no API key is entered", function()
-        -- Mock vim.fn.input to return empty string
+        -- Setup mocks
+        io_open_stub
+            .on_call_with(vim.fn.stdpath("data") .. "/linear_api_key.txt", "r")
+            .returns(nil) -- File doesn't exist
+        io_open_stub
+            .on_call_with(vim.fn.stdpath("data") .. "/linear_api_key.txt", "w")
+            .returns(create_mock_file())
+
         local input_stub = stub(vim.fn, "input", function()
             return ""
         end)
@@ -56,12 +77,11 @@ describe("key-store", function()
     end)
 
     it("should read API key from file if it exists", function()
-        -- Create test file with API key
-        local file = io.open(test_file_path, "w")
-        file:write(test_api_key)
-        file:close()
+        -- Setup mocks
+        io_open_stub
+            .on_call_with(vim.fn.stdpath("data") .. "/linear_api_key.txt", "r")
+            .returns(create_mock_file(test_api_key))
 
-        -- Mock vim.fn.input to ensure it's not called
         local input_stub = stub(vim.fn, "input")
 
         local result = key_store.fetch_api_key()

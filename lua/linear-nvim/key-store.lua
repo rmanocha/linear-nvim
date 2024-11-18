@@ -24,12 +24,10 @@ function M.fetch_api_key()
         api_key = string.gsub(api_key, "%s", "")
     else
         api_key = vim.fn.input("Enter your API key: ")
-        if api_key ~= "" then
-            save_api_key(api_key)
-        else
-            log.warn("No API key entered.")
+        if api_key == nil or api_key == "" then
             return nil
         end
+        save_api_key(api_key)
     end
     return api_key
 end
