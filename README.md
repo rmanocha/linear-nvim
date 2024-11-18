@@ -10,6 +10,7 @@
     - [Getting an API Key](#getting-an-api-key)
       - [Storage of the API Key](#storage-of-the-api-key)
     - [Keymaps](#keymaps)
+  - [Run tests](#run-tests)
   - [Roadmap](#roadmap)
   <!--toc:end-->
 
@@ -99,6 +100,12 @@ end)
 vim.keymap.set("n", "<leader>ms", function()
   require("linear-nvim").show_issue_details()
 end)
+```
+
+## Run tests
+
+```bash
+nvim --headless -c "PlenaryBustedDirectory lua/linear-nvim/tests/"
 ```
 
 ## Roadmap
