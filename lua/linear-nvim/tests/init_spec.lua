@@ -140,4 +140,55 @@ describe("init", function()
             get_assigned_issues_stub:revert()
         end
     )
+
+    it("should properly format issues for telescope picker", function()
+        -- Create a mock client with get_assigned_issues method
+        local mock_client = {
+            get_assigned_issues = function()
+                return {
+                    {
+                        identifier = "TEST-123",
+                        title = "Test Issue",
+                        branchName = "test-branch",
+                        description = "Test description",
+                    },
+                }
+            end,
+        }
+
+        -- Stub the show_telescope_picker function
+        local show_telescope_picker_stub =
+            stub(require("linear-nvim.utils"), "show_telescope_picker")
+
+        -- Make client_stub return our mock client
+        client_stub.returns(mock_client)
+
+        -- Setup linear with the mock client
+        linear.setup({})
+
+        -- Call the function that should trigger the telescope picker
+        linear.show_assigned_issues()
+
+        -- Verify show_telescope_picker was called with correct arguments
+        assert.stub(show_telescope_picker_stub).was_called(1)
+
+        -- Get the arguments passed to show_telescope_picker
+        local call_args = show_telescope_picker_stub.calls[1]
+        local entries = call_args.refs[1]
+        local title = call_args.refs[2]
+
+        -- Verify the title
+        assert.equals("Issues", title)
+
+        -- Verify the entries structure
+        assert.equals(1, #entries)
+        local entry = entries[1]
+        assert.equals("test-branch", entry.value)
+        assert.equals("TEST-123 - Test Issue", entry.display)
+        assert.equals("TEST-123 - Test Issue", entry.ordinal)
+        assert.equals("Test description", entry.description)
+
+        -- Clean up
+        show_telescope_picker_stub:revert()
+    end)
 end)
