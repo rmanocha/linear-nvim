@@ -67,7 +67,6 @@ describe("init", function()
         -- Verify client was initialized with default fields and labels
         assert.stub(client_stub).was_called()
         local client_call = client_stub.calls[1]
-        log.warn(client_call.refs[2])
         assert.equals("function", type(client_call.vals[1]["fetch_api_key"])) -- key_store.fetch_api_key
         assert.same({
             "url",
@@ -101,4 +100,44 @@ describe("init", function()
         assert.same({ "url", "title" }, client_call.refs[3]) -- issue_fields
         assert.same({ "label1", "label2" }, client_call.refs[4]) -- default_label_ids
     end)
+
+    it(
+        "should call client:get_assigned_issues when trying to show assigned issues",
+        function()
+            -- Create a mock client with get_assigned_issues method
+            local mock_client = {
+                get_assigned_issues = function()
+                    return {
+                        {
+                            identifier = "TEST-123",
+                            title = "Test Issue",
+                            branchName = "test-branch",
+                            description = "Test description",
+                        },
+                    }
+                end,
+            }
+
+            -- Stub get_assigned_issues
+            local get_assigned_issues_stub =
+                stub(mock_client, "get_assigned_issues")
+
+            -- Make client_stub return our mock client
+            client_stub.returns(mock_client)
+
+            -- Setup linear with the mock client
+            linear.setup({})
+
+            -- Ensure the client was set
+            assert.is_not_nil(linear.client)
+
+            linear.show_assigned_issues()
+
+            -- Verify the get_assigned_issues method was called
+            assert.stub(get_assigned_issues_stub).was_called(1)
+
+            -- Clean up
+            get_assigned_issues_stub:revert()
+        end
+    )
 end)
