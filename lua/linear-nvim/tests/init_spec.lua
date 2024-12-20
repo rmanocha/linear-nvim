@@ -1,6 +1,6 @@
 local stub = require("luassert.stub")
+local match = require("luassert.match")
 local assert = require("luassert")
-local log = require("plenary.log")
 
 describe("init", function()
     -- Mock all telescope dependencies before requiring linear-nvim
@@ -191,4 +191,190 @@ describe("init", function()
         -- Clean up
         show_telescope_picker_stub:revert()
     end)
+
+    it("Create issue failure without a selection or input title", function()
+        local get_visual_selection_stub =
+            stub(require("linear-nvim.utils"), "get_visual_selection")
+        get_visual_selection_stub.returns("")
+
+        local input_stub = stub(vim.fn, "input")
+        input_stub.returns("")
+
+        linear.setup({})
+        linear.create_issue()
+
+        assert.stub(get_visual_selection_stub).was_called(1)
+        assert.stub(input_stub).was_called(1)
+        assert.stub(log_stub).was_called_with({
+            plugin = "linear-nvim",
+            use_console = "async",
+            level = "warn",
+        }, true)
+
+        get_visual_selection_stub:revert()
+        input_stub:revert()
+    end)
+
+    it(
+        "Create issue prompts for title when no selection and nil result from create_issue",
+        function()
+            local get_visual_selection_stub =
+                stub(require("linear-nvim.utils"), "get_visual_selection")
+            get_visual_selection_stub.returns("")
+            local mock_client = {
+                create_issue = stub().invokes(function(_, _, _, callback)
+                    callback(nil)
+                end),
+            }
+            client_stub.returns(mock_client)
+
+            local notify_stub = stub(vim, "notify")
+
+            local input_stub = stub(vim.fn, "input")
+            input_stub.returns("test title")
+
+            linear.setup({})
+            linear.create_issue()
+
+            assert.stub(get_visual_selection_stub).was_called(1)
+            assert.stub(input_stub).was_called(1)
+            assert.stub(log_stub).was_called_with({
+                plugin = "linear-nvim",
+                use_console = "async",
+                level = "warn",
+            }, true)
+            assert.stub(mock_client.create_issue).was_called(1)
+            assert
+                .stub(mock_client.create_issue)
+                .was_called_with(mock_client, "test title", "", match.is_function())
+            assert
+                .stub(notify_stub)
+                .was_called_with("Failed to create issue", vim.log.levels.ERROR)
+
+            get_visual_selection_stub:revert()
+            input_stub:revert()
+            notify_stub:revert()
+        end
+    )
+
+    it(
+        "Create issue prompts for title when no selection and non-nil result from create_issue",
+        function()
+            local get_visual_selection_stub =
+                stub(require("linear-nvim.utils"), "get_visual_selection")
+            get_visual_selection_stub.returns("")
+            local issue_stub = {
+                url = "http://example.com",
+                title = "test_title",
+                id = "abc",
+            }
+
+            local mock_client = {
+                create_issue = stub().invokes(function(_, _, _, callback)
+                    callback(issue_stub)
+                end),
+            }
+            client_stub.returns(mock_client)
+
+            local notify_stub = stub(vim, "notify")
+
+            local input_stub = stub(vim.fn, "input")
+
+            input_stub.returns("test title")
+
+            -- Stub the show_telescope_picker function
+            local show_telescope_picker_stub =
+                stub(require("linear-nvim.utils"), "show_telescope_picker")
+
+            linear.setup({})
+            linear.create_issue()
+
+            assert.stub(get_visual_selection_stub).was_called(1)
+            assert.stub(input_stub).was_called(1)
+            assert.stub(log_stub).was_called_with({
+                plugin = "linear-nvim",
+                use_console = "async",
+                level = "warn",
+            }, true)
+            assert.stub(mock_client.create_issue).was_called(1)
+            assert
+                .stub(mock_client.create_issue)
+                .was_called_with(mock_client, "test title", "", match.is_function())
+            assert
+                .stub(notify_stub)
+                .was_called_with("Issue created successfully", vim.log.levels.INFO)
+            assert
+                .stub(show_telescope_picker_stub)
+                .was_called_with(match.is_table(), "Issue created")
+
+            get_visual_selection_stub:revert()
+            input_stub:revert()
+            notify_stub:revert()
+            show_telescope_picker_stub:revert()
+        end
+    )
+
+    it(
+        "Create issue uses selection and non-nil result from create_issue",
+        function()
+            local get_visual_selection_stub =
+                stub(require("linear-nvim.utils"), "get_visual_selection")
+            get_visual_selection_stub.returns([[
+test_title
+test_description]])
+            local issue_stub = {
+                url = "http://example.com",
+                title = "test_title",
+                id = "abc",
+            }
+
+            local mock_client = {
+                create_issue = stub().invokes(function(_, _, _, callback)
+                    callback(issue_stub)
+                end),
+            }
+            client_stub.returns(mock_client)
+
+            local notify_stub = stub(vim, "notify")
+
+            local input_stub = stub(vim.fn, "input")
+
+            input_stub.returns("test title from input")
+
+            -- Stub the show_telescope_picker function
+            local show_telescope_picker_stub =
+                stub(require("linear-nvim.utils"), "show_telescope_picker")
+
+            linear.setup({})
+            linear.create_issue()
+
+            assert.stub(get_visual_selection_stub).was_called(1)
+            assert.stub(input_stub).was_called(0)
+            assert.stub(log_stub).was_called_with({
+                plugin = "linear-nvim",
+                use_console = "async",
+                level = "warn",
+            }, true)
+            assert.stub(mock_client.create_issue).was_called(1)
+            assert
+                .stub(mock_client.create_issue)
+                .was_called_with(
+                    mock_client,
+                    "test_title",
+                    "test_description",
+                    match.is_function()
+                )
+            assert
+                .stub(notify_stub)
+                .was_called_with("Issue created successfully", vim.log.levels.INFO)
+            assert
+                .stub(show_telescope_picker_stub)
+                .was_called_with(match.is_table(), "Issue created")
+
+            get_visual_selection_stub:revert()
+            input_stub:revert()
+            notify_stub:revert()
+            show_telescope_picker_stub:revert()
+        end
+    )
 end)
