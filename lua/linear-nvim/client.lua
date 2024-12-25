@@ -15,7 +15,7 @@ LinearClient._default_labels = {}
 --- @param api_key string
 --- @param query string
 --- @return table?
-local function make_query(api_key, query)
+LinearClient._make_query = function(api_key, query)
     local headers = {
         ["Authorization"] = api_key,
         ["Content-Type"] = "application/json",
@@ -128,7 +128,7 @@ end
 --- @return string?
 function LinearClient:get_user_id()
     local query = '{ "query": "{ viewer { id name } }" }'
-    local data = make_query(self:fetch_api_key(), query)
+    local data = self._make_query(self:fetch_api_key(), query)
     if data and data.data and data.data.viewer and data.data.viewer.id then
         return data.data.viewer.id
     else
@@ -143,7 +143,7 @@ function LinearClient:get_assigned_issues()
         '{"query": "query { user(id: \\"%s\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}',
         self:get_user_id()
     )
-    local data = make_query(self:fetch_api_key(), query)
+    local data = self._make_query(self:fetch_api_key(), query)
 
     if
         data
@@ -162,7 +162,7 @@ end
 function LinearClient:get_teams()
     local query = '{ "query": "query { teams { nodes {id name }} }" }'
 
-    local data = make_query(self:fetch_api_key(), query)
+    local data = self._make_query(self:fetch_api_key(), query)
 
     if data and data.data and data.data.teams and data.data.teams.nodes then
         return data.data.teams.nodes
@@ -214,7 +214,7 @@ function LinearClient:create_issue(title, description, callback)
             issue_fields_query
         )
 
-        local data = make_query(self:fetch_api_key(), query)
+        local data = self._make_query(self:fetch_api_key(), query)
 
         if
             data
@@ -242,7 +242,7 @@ function LinearClient:get_issue_details(issue_id)
         issue_fields_query
     )
 
-    local data = make_query(self:fetch_api_key(), query)
+    local data = self._make_query(self:fetch_api_key(), query)
 
     if data and data.data and data.data.issue then
         return data.data.issue
