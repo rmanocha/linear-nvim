@@ -161,15 +161,32 @@ end
 --- @return table?
 function LinearClient:get_teams()
     local query = '{ "query": "query { teams { nodes {id name }} }" }'
-
     local data = self._make_query(self:fetch_api_key(), query)
 
+    local teams = {}
+
     if data and data.data and data.data.teams and data.data.teams.nodes then
-        return data.data.teams.nodes
+      teams = data.data.teams.nodes
+      return teams
     else
         log.error("No teams found")
         return nil
     end
+
+    local allTeamsFetched = false
+    while( !allTeamsFetched )
+      do
+      local query = '{ "query": "query { teams(after: %s) { nodes {id name }} }" }'
+      local data = self._make_query(self:fetch_api_key(), query)
+
+      if data and data.data and data.data.teams and data.data.teams.nodes then
+        for _, team in ipairs(data.data.teams.nodes) do
+          table.insert(teams, team)
+        end
+      end
+      allTeamsFetched = true
+    end
+    return teams
 end
 
 --- @param labels string[]
