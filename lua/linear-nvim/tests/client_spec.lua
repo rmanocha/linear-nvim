@@ -195,7 +195,7 @@ describe("linear client tests", function()
         -- Verify the query format
         assert.stub(client._make_query).was_called_with(
             "test-key",
-            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}'
+            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(first: 50 filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } pageInfo {hasNextPage endCursor} } } }"}'
         )
     end)
 
@@ -218,7 +218,7 @@ describe("linear client tests", function()
         -- Verify the query was attempted
         assert.stub(client._make_query).was_called_with(
             "test-key",
-            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}'
+            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(first: 50 filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } pageInfo {hasNextPage endCursor} } } }"}'
         )
     end)
 
@@ -257,7 +257,7 @@ describe("linear client tests", function()
         assert.stub(client._make_query).was_called(1)
         assert
             .stub(client._make_query)
-            .was_called_with("test-key", '{ "query": "query { teams { nodes {id name }} }" }')
+            .was_called_with("test-key", '{"query":"query { teams(first: 50) { nodes {id name } pageInfo {hasNextPage endCursor}} }"}')
     end)
 
     it("test get_teams returns nil when API call fails", function()
@@ -274,7 +274,7 @@ describe("linear client tests", function()
         assert.stub(client._make_query).was_called(1)
         assert
             .stub(client._make_query)
-            .was_called_with("test-key", '{ "query": "query { teams { nodes {id name }} }" }')
+            .was_called_with("test-key", '{"query":"query { teams(first: 50) { nodes {id name } pageInfo {hasNextPage endCursor}} }"}')
     end)
 
     it("test get_issue_details returns issue details from API", function()
