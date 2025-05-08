@@ -44,19 +44,19 @@ end
 --- @param data table
 --- @return boolean
 LinearClient._get_hasNextPage = function(data)
-  if data.pageInfo then
-    return data.pageInfo.hasNextPage
-  end
-  return false
+    if data.pageInfo then
+        return data.pageInfo.hasNextPage
+    end
+    return false
 end
 
 --- @param data table
 --- @return string
 LinearClient._get_endCursor = function(data)
-  if data.pageInfo then
-    return data.pageInfo.endCursor
-  end
-  return ""
+    if data.pageInfo then
+        return data.pageInfo.endCursor
+    end
+    return ""
 end
 
 --- @param callback_for_api_key function
@@ -178,8 +178,8 @@ function LinearClient:get_assigned_issues()
     then
         assignedIssues = data.data.user.assignedIssues.nodes
         if data.data.user.assignedIssues.pageInfo then
-          hasNextPage = self._get_hasNextPage(data.data.user.assignedIssues)
-          endCursor = self._get_endCursor(data.data.user.assignedIssues)
+            hasNextPage = self._get_hasNextPage(data.data.user.assignedIssues)
+            endCursor = self._get_endCursor(data.data.user.assignedIssues)
         end
     else
         log.error("Assigned issues not found in response")
@@ -187,26 +187,27 @@ function LinearClient:get_assigned_issues()
     end
 
     -- handle pagination, fetch all remaining pages of assignedIssues
-    while (hasNextPage == true) do
-      -- double escaping the double quotes is very important
-      local subquery = string.format(
-      '{"query": "query { user(id: \\"%s\\") { id name assignedIssues(first: 50 after: \\"%s\\" filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } pageInfo {hasNextPage endCursor} } } }"}',
-      user_id,
-      endCursor
-      )
-      local subdata = self._make_query(api_key, subquery)
+    while hasNextPage == true do
+        -- double escaping the double quotes is very important
+        local subquery = string.format(
+            '{"query": "query { user(id: \\"%s\\") { id name assignedIssues(first: 50 after: \\"%s\\" filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } pageInfo {hasNextPage endCursor} } } }"}',
+            user_id,
+            endCursor
+        )
+        local subdata = self._make_query(api_key, subquery)
 
         if
-          subdata
-          and subdata.data
-          and subdata.data.user
-          and subdata.data.user.assignedIssues
+            subdata
+            and subdata.data
+            and subdata.data.user
+            and subdata.data.user.assignedIssues
         then
-          for _, issue in ipairs(subdata.data.user.assignedIssues.nodes) do
-            table.insert(assignedIssues, issue)
-          end
-          hasNextPage = self._get_hasNextPage(subdata.data.user.assignedIssues)
-          endCursor = self._get_endCursor(subdata.data.user.assignedIssues)
+            for _, issue in ipairs(subdata.data.user.assignedIssues.nodes) do
+                table.insert(assignedIssues, issue)
+            end
+            hasNextPage =
+                self._get_hasNextPage(subdata.data.user.assignedIssues)
+            endCursor = self._get_endCursor(subdata.data.user.assignedIssues)
         end
     end
 
@@ -215,41 +216,48 @@ end
 
 --- @return table?
 function LinearClient:get_teams()
-    local query = '{"query":"query { teams(first: 50) { nodes {id name } pageInfo {hasNextPage endCursor}} }"}'
-    local api_key = self:fetch_api_key()
-    local data = self._make_query(api_key, query)
+    --- @param cursor string?
+    local function create_query(cursor)
+        local template =
+            "query { teams(first: 50%s) { nodes {id name}, pageInfo {hasNextPage endCursor} } }"
 
-    local teams = {}
-    local endCursor = ""
-    local hasNextPage = false
+        -- Add the after parameter only if cursor is provided
+        local after_param = cursor and (', after: \\"' .. cursor .. '\\""')
+            or ""
 
-    if data and data.data and data.data.teams and data.data.teams.nodes then
-      teams = data.data.teams.nodes
-      if data.data.teams.pageInfo then
-        hasNextPage = self._get_hasNextPage(data.data.teams)
-        endCursor = self._get_endCursor(data.data.teams)
-      end
-    else
-        log.error("No teams found")
-        return nil
+        -- Format the complete query string
+        return string.format(
+            '{"query": "%s"}',
+            string.format(template, after_param)
+        )
     end
 
-    -- handle pagination, fetch all remaining pages of teams
-    while (hasNextPage == true) do
-      -- double escaping the double quotes is very important
-      local subquery = string.format('{"query": "query { teams(first: 50, after: \\"%s\\") { nodes {id name }, pageInfo {hasNextPage endCursor} } }"}', endCursor)
-      local subdata = self._make_query(api_key, subquery)
+    local api_key = self:fetch_api_key()
+    local teams = {}
+    local endCursor = ""
+    local hasNextPage = true
 
-      if subdata and subdata.data and subdata.data.teams  then
-        if subdata.data.teams.nodes then
-          for _, team in ipairs(subdata.data.teams.nodes) do
-            table.insert(teams, team)
-          end
+    -- Use initial query with no cursor
+    while hasNextPage do
+        local query_string = create_query(endCursor ~= "" and endCursor or nil)
+        local data = self._make_query(api_key, query_string)
+
+        if data and data.data and data.data.teams then
+            if data.data.teams.nodes then
+                for _, team in ipairs(data.data.teams.nodes) do
+                    table.insert(teams, team)
+                end
+            end
+
+            hasNextPage = self._get_hasNextPage(data.data.teams)
+            endCursor = self._get_endCursor(data.data.teams)
+        else
+            if #teams == 0 then
+                log.error("No teams found")
+                return nil
+            end
+            break
         end
-
-        hasNextPage = self._get_hasNextPage(subdata.data.teams)
-        endCursor = self._get_endCursor(subdata.data.teams)
-      end
     end
     return teams
 end
