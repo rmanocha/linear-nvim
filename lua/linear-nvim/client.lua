@@ -157,18 +157,11 @@ end
 
 --- @return table?
 function LinearClient:get_assigned_issues()
-    vim.notify("Fetching assigned issues..", vim.log.levels.INFO)
-    local user_id = self:get_user_id()
-    local api_key = self:fetch_api_key()
     local query = string.format(
-        '{"query": "query { user(id: \\"%s\\") { id name assignedIssues(first: 50 filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } pageInfo {hasNextPage endCursor} } } }"}',
-        user_id
+        '{"query": "query { user(id: \\"%s\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}',
+        self:get_user_id()
     )
-    local data = self._make_query(api_key, query)
-
-    local assignedIssues = {}
-    local endCursor = ""
-    local hasNextPage = false
+    local data = self._make_query(self:fetch_api_key(), query)
 
     if
         data
@@ -176,42 +169,11 @@ function LinearClient:get_assigned_issues()
         and data.data.user
         and data.data.user.assignedIssues
     then
-        assignedIssues = data.data.user.assignedIssues.nodes
-        if data.data.user.assignedIssues.pageInfo then
-            hasNextPage = self._get_hasNextPage(data.data.user.assignedIssues)
-            endCursor = self._get_endCursor(data.data.user.assignedIssues)
-        end
+        return data.data.user.assignedIssues.nodes
     else
         log.error("Assigned issues not found in response")
         return nil
     end
-
-    -- handle pagination, fetch all remaining pages of assignedIssues
-    while hasNextPage == true do
-        -- double escaping the double quotes is very important
-        local subquery = string.format(
-            '{"query": "query { user(id: \\"%s\\") { id name assignedIssues(first: 50 after: \\"%s\\" filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } pageInfo {hasNextPage endCursor} } } }"}',
-            user_id,
-            endCursor
-        )
-        local subdata = self._make_query(api_key, subquery)
-
-        if
-            subdata
-            and subdata.data
-            and subdata.data.user
-            and subdata.data.user.assignedIssues
-        then
-            for _, issue in ipairs(subdata.data.user.assignedIssues.nodes) do
-                table.insert(assignedIssues, issue)
-            end
-            hasNextPage =
-                self._get_hasNextPage(subdata.data.user.assignedIssues)
-            endCursor = self._get_endCursor(subdata.data.user.assignedIssues)
-        end
-    end
-
-    return assignedIssues
 end
 
 --- @return table?
@@ -219,15 +181,14 @@ function LinearClient:get_teams()
     --- @param cursor string?
     local function create_query(cursor)
         local template =
-            "query { teams(first: 50%s) { nodes {id name}, pageInfo {hasNextPage endCursor} } }"
+            "query { teams(first: 50%s) { nodes {id name}, pageInfo {hasNextPage endCursor}}}"
 
         -- Add the after parameter only if cursor is provided
-        local after_param = cursor and (', after: \\"' .. cursor .. '\\""')
-            or ""
+        local after_param = cursor and (', after: \\"' .. cursor .. '\\"') or ""
 
         -- Format the complete query string
         return string.format(
-            '{"query": "%s"}',
+            '{"query":"%s"}',
             string.format(template, after_param)
         )
     end

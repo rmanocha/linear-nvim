@@ -195,7 +195,7 @@ describe("linear client tests", function()
         -- Verify the query format
         assert.stub(client._make_query).was_called_with(
             "test-key",
-            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(first: 50 filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } pageInfo {hasNextPage endCursor} } } }"}'
+            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}'
         )
     end)
 
@@ -218,7 +218,7 @@ describe("linear client tests", function()
         -- Verify the query was attempted
         assert.stub(client._make_query).was_called_with(
             "test-key",
-            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(first: 50 filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } pageInfo {hasNextPage endCursor} } } }"}'
+            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}'
         )
     end)
 
@@ -255,9 +255,93 @@ describe("linear client tests", function()
         assert.same("Design", teams[2].name)
 
         assert.stub(client._make_query).was_called(1)
-        assert
-            .stub(client._make_query)
-            .was_called_with("test-key", '{"query":"query { teams(first: 50) { nodes {id name } pageInfo {hasNextPage endCursor}} }"}')
+        assert.stub(client._make_query).was_called_with(
+            "test-key",
+            '{"query":"query { teams(first: 50) { nodes {id name}, pageInfo {hasNextPage endCursor}}}"}'
+        )
+    end)
+
+    it("test get_teams with pagination returns all teams from API", function()
+        local fetch_key_func = function()
+            return "test-key"
+        end
+        local client = linear_client:setup(fetch_key_func, { "id" })
+
+        -- Mock _make_query to simulate pagination
+        local call_count = 0
+        stub(client, "_make_query").invokes(function(_, query_string)
+            call_count = call_count + 1
+            if call_count == 1 then
+                -- First page
+                assert.is_true(
+                    string.find(
+                        query_string,
+                        "query { teams(first: 50) { nodes {id name}, pageInfo {hasNextPage endCursor}}}",
+                        1,
+                        true
+                    ) ~= nil
+                )
+                return {
+                    data = {
+                        teams = {
+                            nodes = {
+                                { id = "team-1", name = "Page1 Team1" },
+                                { id = "team-2", name = "Page1 Team2" },
+                            },
+                            pageInfo = {
+                                hasNextPage = true,
+                                endCursor = "cursor123",
+                            },
+                        },
+                    },
+                }
+            elseif call_count == 2 then
+                -- Second page, ensure cursor is used
+                assert.is_true(
+                    string.find(
+                        query_string,
+                        'query { teams(first: 50, after: \\"cursor123\\") { nodes {id name}, pageInfo {hasNextPage endCursor}}}',
+                        1,
+                        true
+                    ) ~= nil
+                )
+                return {
+                    data = {
+                        teams = {
+                            nodes = {
+                                { id = "team-3", name = "Page2 Team1" },
+                            },
+                            pageInfo = {
+                                hasNextPage = false,
+                                endCursor = "cursor456", -- Can be anything if hasNextPage is false
+                            },
+                        },
+                    },
+                }
+            else
+                return {
+                    data = {
+                        teams = {
+                            nodes = {},
+                            pageInfo = { hasNextPage = false },
+                        },
+                    },
+                } -- Should not be called more than twice
+            end
+        end)
+
+        local teams = client:get_teams()
+
+        assert.is_not_nil(teams)
+        assert.equals(3, #teams)
+        assert.same("team-1", teams[1].id)
+        assert.same("Page1 Team1", teams[1].name)
+        assert.same("team-2", teams[2].id)
+        assert.same("Page1 Team2", teams[2].name)
+        assert.same("team-3", teams[3].id)
+        assert.same("Page2 Team1", teams[3].name)
+
+        assert.stub(client._make_query).was_called(2)
     end)
 
     it("test get_teams returns nil when API call fails", function()
@@ -272,9 +356,10 @@ describe("linear client tests", function()
 
         assert.is_nil(teams)
         assert.stub(client._make_query).was_called(1)
-        assert
-            .stub(client._make_query)
-            .was_called_with("test-key", '{"query":"query { teams(first: 50) { nodes {id name } pageInfo {hasNextPage endCursor}} }"}')
+        assert.stub(client._make_query).was_called_with(
+            "test-key",
+            '{"query":"query { teams(first: 50) { nodes {id name}, pageInfo {hasNextPage endCursor}}}"}'
+        )
     end)
 
     it("test get_issue_details returns issue details from API", function()
