@@ -41,6 +41,24 @@ LinearClient._make_query = function(api_key, query)
     return data
 end
 
+--- @param data table
+--- @return boolean
+LinearClient._get_hasNextPage = function(data)
+    if data.pageInfo then
+        return data.pageInfo.hasNextPage
+    end
+    return false
+end
+
+--- @param data table
+--- @return string
+LinearClient._get_endCursor = function(data)
+    if data.pageInfo then
+        return data.pageInfo.endCursor
+    end
+    return ""
+end
+
 --- @param callback_for_api_key function
 --- @param issue_fields string[]
 --- @param default_labels? string[]
@@ -160,16 +178,49 @@ end
 
 --- @return table?
 function LinearClient:get_teams()
-    local query = '{ "query": "query { teams { nodes {id name }} }" }'
+    --- @param cursor string?
+    local function create_query(cursor)
+        local template =
+            "query { teams(first: 50%s) { nodes {id name}, pageInfo {hasNextPage endCursor}}}"
 
-    local data = self._make_query(self:fetch_api_key(), query)
+        -- Add the after parameter only if cursor is provided
+        local after_param = cursor and (', after: \\"' .. cursor .. '\\"') or ""
 
-    if data and data.data and data.data.teams and data.data.teams.nodes then
-        return data.data.teams.nodes
-    else
-        log.error("No teams found")
-        return nil
+        -- Format the complete query string
+        return string.format(
+            '{"query":"%s"}',
+            string.format(template, after_param)
+        )
     end
+
+    local api_key = self:fetch_api_key()
+    local teams = {}
+    local endCursor = ""
+    local hasNextPage = true
+
+    -- Use initial query with no cursor
+    while hasNextPage do
+        local query_string = create_query(endCursor ~= "" and endCursor or nil)
+        local data = self._make_query(api_key, query_string)
+
+        if data and data.data and data.data.teams then
+            if data.data.teams.nodes then
+                for _, team in ipairs(data.data.teams.nodes) do
+                    table.insert(teams, team)
+                end
+            end
+
+            hasNextPage = self._get_hasNextPage(data.data.teams)
+            endCursor = self._get_endCursor(data.data.teams)
+        else
+            if #teams == 0 then
+                log.error("No teams found")
+                return nil
+            end
+            break
+        end
+    end
+    return teams
 end
 
 --- @param labels string[]
