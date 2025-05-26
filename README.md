@@ -115,6 +115,8 @@ nvim --headless -c "PlenaryBustedDirectory lua/linear-nvim/tests/"
   - Pull more than 50 issues when trying to list them
   - ~~Add a default label when creating new issues~~
   - Filter down listed issues to a specific team
+  - ~~Allow users to configure the key used in telescope to open an issue url in their browser~~
+- ~~Allow users to open a issue in their browser~~
 - Integrate with a git plugin to automatically create the new branch (does lazygit support this?)
 - Add support to provide a description for newly created issues
 - Integrate with [folke/todo-comments.nvim](https://github.com/folke/todo-comments.nvim) to create issues from TODOs
