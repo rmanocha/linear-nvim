@@ -62,6 +62,7 @@ local function show_issues_picker(issues)
             display = display_key, -- How the entry will be displayed
             ordinal = display_key, -- Used for sorting and searching
             description = data_bag.description, -- Additional information that can be displayed
+            url = data_bag.url,
         })
     end
 
@@ -112,8 +113,11 @@ function M.show_assigned_issues()
         if description == vim.NIL or description == nil then
             description = "No description available"
         end
-        issue_titles[issue.identifier .. " - " .. issue.title] =
-            { branch_name = issue.branchName, description = description }
+        issue_titles[issue.identifier .. " - " .. issue.title] = {
+            branch_name = issue.branchName,
+            description = description,
+            url = issue.url,
+        }
     end
 
     show_issues_picker(issue_titles)
