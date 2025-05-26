@@ -4,6 +4,12 @@ local key_store = require("linear-nvim.key-store")
 local utils = require("linear-nvim.utils")
 local log = require("plenary.log")
 
+--- @class LinearNvimOptions
+--- @field issue_regex? string
+--- @field issue_fields? string[]
+--- @field default_label_ids? string[]
+--- @field log_level? string
+
 --- @type LinearNvimOptions
 M.options = {
     issue_regex = "",
