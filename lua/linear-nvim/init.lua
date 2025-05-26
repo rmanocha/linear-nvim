@@ -10,6 +10,7 @@ local log = require("plenary.log")
 --- @field default_label_ids? string[]
 --- @field log_level? string
 --- @field open_url_key? string
+--- @field open_issue_browser? boolean
 
 --- @type LinearNvimOptions
 M.options = {
@@ -42,6 +43,7 @@ local defaults = {
     default_label_ids = {},
     log_level = "warn",
     open_url_key = "<c-b>",
+    open_issue_browser = false,
 }
 
 --- @param options? LinearNvimOptions
@@ -151,7 +153,14 @@ function M.create_issue()
     M.client:create_issue(title, description, function(issue)
         if issue ~= nil then
             vim.notify("Issue created successfully", vim.log.levels.INFO)
-            show_create_issues_result_picker(issue, M.options.issue_fields)
+            if M.options.open_issue_browser then
+                log.debug("Opening in browser")
+                -- Open the url in the browser
+                utils.open_in_browser_raw(issue.url)
+            else
+                log.debug("Opening telescope picker")
+                show_create_issues_result_picker(issue, M.options.issue_fields)
+            end
         else
             vim.notify("Failed to create issue", vim.log.levels.ERROR)
         end

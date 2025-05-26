@@ -392,4 +392,43 @@ test_description]])
         assert.equals("<c-o>", utils.open_url_key)
     end)
 
+    it(
+        "should open issue in browser when open_issue_browser is true",
+        function()
+            -- stub visual selection to return title and description
+            local get_visual_selection_stub =
+                stub(require("linear-nvim.utils"), "get_visual_selection")
+            get_visual_selection_stub.returns("test_title\ntest_description")
+            -- stub input (should not be called)
+            local input_stub = stub(vim.fn, "input")
+            -- stub client.create_issue to invoke callback with issue stub
+            local issue_stub = {
+                url = "http://test-browser",
+                title = "test_title",
+                id = "abc",
+            }
+            local mock_client = {
+                create_issue = stub().invokes(function(_, _, _, callback)
+                    callback(issue_stub)
+                end),
+            }
+            client_stub.returns(mock_client)
+            -- stub notify and open_in_browser_raw
+            local notify_stub = stub(vim, "notify")
+            local open_browser_stub =
+                stub(require("linear-nvim.utils"), "open_in_browser_raw")
+            -- setup with open_issue_browser true
+            require("linear-nvim").setup({ open_issue_browser = true })
+            require("linear-nvim").create_issue()
+            -- assertions
+            assert
+                .stub(open_browser_stub)
+                .was_called_with("http://test-browser")
+            -- cleanup stubs
+            get_visual_selection_stub:revert()
+            input_stub:revert()
+            open_browser_stub:revert()
+            notify_stub:revert()
+        end
+    )
 end)

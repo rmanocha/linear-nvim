@@ -55,6 +55,7 @@ require("linear-nvim").setup({
   default_label_ids = { "abc" } -- optional. Table of default label IDs to apply for each new issue created
   log_level = "warn" -- optional. Sets the logging level for the plugin
   open_url_key = "<c-b>" -- optional. Sets the key to be used in telescope to open an issue in the browser. Default is <C-b>
+  open_issue_browser = false -- optional. When true, opens newly created issues in the browser instead of a telescope picker
 })
 ```
 
@@ -112,7 +113,7 @@ nvim --headless -c "PlenaryBustedDirectory lua/linear-nvim/tests/"
 ## Roadmap
 
 - Provide configuration options
-  - Change the default behavior from copy to something else (eg. open in browser)
+  - ~~Change the default behavior from copy to something else (eg. open in browser)~~
   - Pull more than 50 issues when trying to list them
   - ~~Add a default label when creating new issues~~
   - Filter down listed issues to a specific team
