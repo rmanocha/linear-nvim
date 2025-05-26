@@ -9,6 +9,7 @@ local log = require("plenary.log")
 --- @field issue_fields? string[]
 --- @field default_label_ids? string[]
 --- @field log_level? string
+--- @field open_url_key? string
 
 --- @type LinearNvimOptions
 M.options = {
@@ -40,12 +41,14 @@ local defaults = {
     },
     default_label_ids = {},
     log_level = "warn",
+    open_url_key = "<c-b>",
 }
 
 --- @param options? LinearNvimOptions
 function M.setup(options)
     options = options or {}
     M.options = vim.tbl_deep_extend("force", defaults, options)
+    utils.setup(M.options)
     M.client = linear_client:setup(
         key_store.fetch_api_key,
         M.options.issue_fields,

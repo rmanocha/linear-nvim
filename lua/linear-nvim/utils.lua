@@ -7,7 +7,17 @@ local action_state = require("telescope.actions.state")
 local previewers = require("telescope.previewers")
 local log = require("plenary.log")
 
-local M = {}
+local M = {
+    open_url_key = "<c-b>",
+}
+
+--- Set up utils with plugin options
+--- @param opts {open_url_key?: string}
+function M.setup(opts)
+    if opts and opts.open_url_key then
+        M.open_url_key = opts.open_url_key
+    end
+end
 
 local vim = vim
 
@@ -136,8 +146,8 @@ function M.show_telescope_picker(entries, prompt_title)
                     end
                 end
 
-                map("i", "<c-b>", open_url)
-                map("n", "<c-b>", open_url)
+                map("i", M.open_url_key, open_url)
+                map("n", M.open_url_key, open_url)
                 return true
             end,
         })
