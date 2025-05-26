@@ -55,7 +55,7 @@ describe("init", function()
     end)
 
     it("should initialize with default options when none provided", function()
-        linear.setup({})
+        linear.setup()
 
         -- Verify log was initialized with default level
         assert.stub(log_stub).was_called_with({
@@ -126,7 +126,7 @@ describe("init", function()
             client_stub.returns(mock_client)
 
             -- Setup linear with the mock client
-            linear.setup({})
+            linear.setup()
 
             -- Ensure the client was set
             assert.is_not_nil(linear.client)
@@ -151,6 +151,7 @@ describe("init", function()
                         title = "Test Issue",
                         branchName = "test-branch",
                         description = "Test description",
+                        url = "http://example.com",
                     },
                 }
             end,
@@ -164,7 +165,7 @@ describe("init", function()
         client_stub.returns(mock_client)
 
         -- Setup linear with the mock client
-        linear.setup({})
+        linear.setup()
 
         -- Call the function that should trigger the telescope picker
         linear.show_assigned_issues()
@@ -187,6 +188,7 @@ describe("init", function()
         assert.equals("TEST-123 - Test Issue", entry.display)
         assert.equals("TEST-123 - Test Issue", entry.ordinal)
         assert.equals("Test description", entry.description)
+        assert.equals("http://example.com", entry.url)
 
         -- Clean up
         show_telescope_picker_stub:revert()
@@ -200,7 +202,7 @@ describe("init", function()
         local input_stub = stub(vim.fn, "input")
         input_stub.returns("")
 
-        linear.setup({})
+        linear.setup()
         linear.create_issue()
 
         assert.stub(get_visual_selection_stub).was_called(1)
@@ -233,7 +235,7 @@ describe("init", function()
             local input_stub = stub(vim.fn, "input")
             input_stub.returns("test title")
 
-            linear.setup({})
+            linear.setup()
             linear.create_issue()
 
             assert.stub(get_visual_selection_stub).was_called(1)
@@ -286,7 +288,7 @@ describe("init", function()
             local show_telescope_picker_stub =
                 stub(require("linear-nvim.utils"), "show_telescope_picker")
 
-            linear.setup({})
+            linear.setup()
             linear.create_issue()
 
             assert.stub(get_visual_selection_stub).was_called(1)
@@ -345,7 +347,7 @@ test_description]])
             local show_telescope_picker_stub =
                 stub(require("linear-nvim.utils"), "show_telescope_picker")
 
-            linear.setup({})
+            linear.setup()
             linear.create_issue()
 
             assert.stub(get_visual_selection_stub).was_called(1)
@@ -377,4 +379,17 @@ test_description]])
             show_telescope_picker_stub:revert()
         end
     )
+
+    it("should set default open_url_key when none provided", function()
+        require("linear-nvim").setup()
+        local utils = require("linear-nvim.utils")
+        assert.equals("<c-b>", utils.open_url_key)
+    end)
+
+    it("should override open_url_key with user option", function()
+        require("linear-nvim").setup({ open_url_key = "<c-o>" })
+        local utils = require("linear-nvim.utils")
+        assert.equals("<c-o>", utils.open_url_key)
+    end)
+
 end)

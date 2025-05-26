@@ -7,7 +7,19 @@ local action_state = require("telescope.actions.state")
 local previewers = require("telescope.previewers")
 local log = require("plenary.log")
 
-local M = {}
+local M = {
+    open_url_key = "<c-b>",
+}
+
+--- Set up utils with plugin options
+--- @param opts {open_url_key?: string}
+function M.setup(opts)
+    if opts and opts.open_url_key then
+        M.open_url_key = opts.open_url_key
+    end
+end
+
+local vim = vim
 
 local function tbl_length(T)
     local count = 0
@@ -77,8 +89,15 @@ function M.escape_json_string(input_str)
     return input_str
 end
 
--- @param entries table {display = string, value = string, ordinal = string, description = string}
--- @param prompt_title string
+--- @class Entry
+--- @field display string
+--- @field value string
+--- @field ordinal string
+--- @field description string
+--- @field url? string
+
+--- @param entries Entry[]
+--- @param prompt_title string
 function M.show_telescope_picker(entries, prompt_title)
     pickers
         .new({}, {
@@ -91,6 +110,7 @@ function M.show_telescope_picker(entries, prompt_title)
                         display = entry.display,
                         ordinal = entry.ordinal,
                         description = entry.description,
+                        url = entry.url,
                     }
                 end,
             }),
@@ -108,7 +128,7 @@ function M.show_telescope_picker(entries, prompt_title)
                     )
                 end,
             }),
-            attach_mappings = function(prompt_bufnr, _)
+            attach_mappings = function(prompt_bufnr, map)
                 actions.select_default:replace(function()
                     actions.close(prompt_bufnr)
                     local selection = action_state.get_selected_entry()
@@ -116,6 +136,18 @@ function M.show_telescope_picker(entries, prompt_title)
                     vim.fn.setreg('"', selection.value) -- Copy to default register (unnamed register)
                     log.debug("Copied to clipboard: " .. selection.value)
                 end)
+
+                local function open_url()
+                    actions.close(prompt_bufnr)
+                    local selection = action_state.get_selected_entry()
+                    if selection.url then
+                        M.open_in_browser_raw(selection.url)
+                        log.debug("Opening in browser: " .. selection.url)
+                    end
+                end
+
+                map("i", M.open_url_key, open_url)
+                map("n", M.open_url_key, open_url)
                 return true
             end,
         })
@@ -124,6 +156,22 @@ end
 
 function M.get_current_word()
     return vim.fn.expand("<cWORD>")
+end
+
+--[[
+Opens a url in your default browser, bypassing gh.
+]]
+--- @param url string the url to open.
+function M.open_in_browser_raw(url)
+    -- Detect OS using vim.fn.has for type safety
+
+    if vim.fn.has("macunix") == 1 then
+        os.execute("open " .. url)
+    elseif vim.fn.has("unix") == 1 then
+        os.execute("xdg-open " .. url)
+    elseif vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+        os.execute("start " .. url)
+    end
 end
 
 return M

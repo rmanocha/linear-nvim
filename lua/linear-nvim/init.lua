@@ -4,6 +4,13 @@ local key_store = require("linear-nvim.key-store")
 local utils = require("linear-nvim.utils")
 local log = require("plenary.log")
 
+--- @class LinearNvimOptions
+--- @field issue_regex? string
+--- @field issue_fields? string[]
+--- @field default_label_ids? string[]
+--- @field log_level? string
+--- @field open_url_key? string
+
 --- @type LinearNvimOptions
 M.options = {
     issue_regex = "",
@@ -34,12 +41,14 @@ local defaults = {
     },
     default_label_ids = {},
     log_level = "warn",
+    open_url_key = "<c-b>",
 }
 
---- @param options LinearNvimOptions
+--- @param options? LinearNvimOptions
 function M.setup(options)
     options = options or {}
     M.options = vim.tbl_deep_extend("force", defaults, options)
+    utils.setup(M.options)
     M.client = linear_client:setup(
         key_store.fetch_api_key,
         M.options.issue_fields,
@@ -62,6 +71,7 @@ local function show_issues_picker(issues)
             display = display_key, -- How the entry will be displayed
             ordinal = display_key, -- Used for sorting and searching
             description = data_bag.description, -- Additional information that can be displayed
+            url = data_bag.url,
         })
     end
 
@@ -112,8 +122,11 @@ function M.show_assigned_issues()
         if description == vim.NIL or description == nil then
             description = "No description available"
         end
-        issue_titles[issue.identifier .. " - " .. issue.title] =
-            { branch_name = issue.branchName, description = description }
+        issue_titles[issue.identifier .. " - " .. issue.title] = {
+            branch_name = issue.branchName,
+            description = description,
+            url = issue.url,
+        }
     end
 
     show_issues_picker(issue_titles)

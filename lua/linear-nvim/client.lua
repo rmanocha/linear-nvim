@@ -158,7 +158,7 @@ end
 --- @return table?
 function LinearClient:get_assigned_issues()
     local query = string.format(
-        '{"query": "query { user(id: \\"%s\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}',
+        '{"query": "query { user(id: \\"%s\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description url } } } }"}',
         self:get_user_id()
     )
     local data = self._make_query(self:fetch_api_key(), query)

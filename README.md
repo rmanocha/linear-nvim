@@ -54,6 +54,7 @@ require("linear-nvim").setup({
   issue_fields = { "title", "description" }, -- optional. Fields to fetch when viewing issue details for existing or newly created issues
   default_label_ids = { "abc" } -- optional. Table of default label IDs to apply for each new issue created
   log_level = "warn" -- optional. Sets the logging level for the plugin
+  open_url_key = "<c-b>" -- optional. Sets the key to be used in telescope to open an issue in the browser. Default is <C-b>
 })
 ```
 
@@ -115,6 +116,8 @@ nvim --headless -c "PlenaryBustedDirectory lua/linear-nvim/tests/"
   - Pull more than 50 issues when trying to list them
   - ~~Add a default label when creating new issues~~
   - Filter down listed issues to a specific team
+  - ~~Allow users to configure the key used in telescope to open an issue url in their browser~~
+- ~~Allow users to open a issue in their browser~~
 - Integrate with a git plugin to automatically create the new branch (does lazygit support this?)
 - Add support to provide a description for newly created issues
 - Integrate with [folke/todo-comments.nvim](https://github.com/folke/todo-comments.nvim) to create issues from TODOs

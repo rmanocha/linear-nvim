@@ -195,7 +195,7 @@ describe("linear client tests", function()
         -- Verify the query format
         assert.stub(client._make_query).was_called_with(
             "test-key",
-            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}'
+            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description url } } } }"}'
         )
     end)
 
@@ -218,7 +218,7 @@ describe("linear client tests", function()
         -- Verify the query was attempted
         assert.stub(client._make_query).was_called_with(
             "test-key",
-            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description } } } }"}'
+            '{"query": "query { user(id: \\"user-123\\") { id name assignedIssues(filter: {state: {type: {nin: [\\"completed\\", \\"canceled\\"]}}}) { nodes { id title identifier branchName description url } } } }"}'
         )
     end)
 
