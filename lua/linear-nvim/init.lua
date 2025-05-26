@@ -36,7 +36,7 @@ local defaults = {
     log_level = "warn",
 }
 
---- @param options LinearNvimOptions
+--- @param options? LinearNvimOptions
 function M.setup(options)
     options = options or {}
     M.options = vim.tbl_deep_extend("force", defaults, options)
