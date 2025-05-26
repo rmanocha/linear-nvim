@@ -379,4 +379,17 @@ test_description]])
             show_telescope_picker_stub:revert()
         end
     )
+
+    it("should set default open_url_key when none provided", function()
+        require("linear-nvim").setup()
+        local utils = require("linear-nvim.utils")
+        assert.equals("<c-b>", utils.open_url_key)
+    end)
+
+    it("should override open_url_key with user option", function()
+        require("linear-nvim").setup({ open_url_key = "<c-o>" })
+        local utils = require("linear-nvim.utils")
+        assert.equals("<c-o>", utils.open_url_key)
+    end)
+
 end)
